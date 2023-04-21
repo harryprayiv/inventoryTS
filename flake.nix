@@ -22,6 +22,8 @@
           pkgs.nodePackages.pnpm
           # pkgs.yarn
 
+          pkgs.nodePackages.live-server
+
           pkgs.nodePackages.typescript
           pkgs.nodePackages.typescript-language-server
         ];
