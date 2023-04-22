@@ -63,13 +63,13 @@ button:active {
 }
 
 .main-category {
-  margin-left: 20px;
+  margin-left: 10px;
 }
 .sub-category {
   margin-left: 40px;
 }
 .item {
-  margin-left: 60px;
+  margin-left: 90px;
   white-space: pre;
 }
 
