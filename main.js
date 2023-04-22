@@ -85,20 +85,22 @@ function changeCount(sign) {
 function displayCountList(countData) {
     countListElement.innerHTML = ''; // Clear the previous count list
     Object.entries(countData).forEach(([mainCategory, subCategories]) => {
+        const mainCategoryElement = document.createElement('li');
+        mainCategoryElement.textContent = mainCategory;
+        const subCategoryList = document.createElement('ul');
+        mainCategoryElement.appendChild(subCategoryList);
+        countListElement.appendChild(mainCategoryElement);
         Object.entries(subCategories).forEach(([subCategory, items]) => {
+            const subCategoryElement = document.createElement('li');
+            subCategoryElement.textContent = subCategory;
+            const itemList = document.createElement('ul');
+            subCategoryElement.appendChild(itemList);
+            subCategoryList.appendChild(subCategoryElement);
             Object.entries(items).forEach(([item, count]) => {
-                const itemId = `item-${mainCategory}-${subCategory}-${item}`.replace(/[^a-zA-Z0-9-_]/g, '_');
-                let itemElement = document.getElementById(itemId);
-                if (itemElement) {
-                    // Update the count for the existing element
-                    itemElement.textContent = `${mainCategory} > ${subCategory} > ${item}: ${count}`;
-                }
-                else {
-                    // Create a new element for the item
-                    itemElement = document.createElement('div');
-                    itemElement.id = itemId;
-                    itemElement.textContent = `${mainCategory} > ${subCategory} > ${item}: ${count}`;
-                    countListElement.appendChild(itemElement);
+                if (count > 0) { // Only display items with a count greater than 0
+                    const itemElement = document.createElement('li');
+                    itemElement.textContent = `${item}: ${count}`;
+                    itemList.appendChild(itemElement);
                 }
             });
         });
