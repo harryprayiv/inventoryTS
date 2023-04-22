@@ -61,3 +61,20 @@ button:active {
   margin: 0.25rem 0;
   border-radius: 4px;
 }
+
+.main-category {
+  margin-left: 20px;
+}
+.sub-category {
+  margin-left: 40px;
+}
+.item {
+  margin-left: 60px;
+  white-space: pre;
+}
+
+.count {
+  display: inline-block;
+  width: 10px; /* Adjust the width as needed for appropriate spacing */
+  text-align: right;
+}

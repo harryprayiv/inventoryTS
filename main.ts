@@ -101,28 +101,80 @@ function changeCount(sign: number) {
   }, 3000);
 }
 
+const listNameInput = document.getElementById('listName') as HTMLInputElement;
+const renameListButton = document.getElementById('renameList') as HTMLButtonElement;
+const clearListButton = document.getElementById('clearList') as HTMLButtonElement;
+const listNameElement = document.getElementById('listName') as HTMLSpanElement;
+
+renameListButton.addEventListener('click', () => {
+  const newListName = prompt('Enter the new name for the list:');
+  if (newListName !== null && newListName.trim() !== '') {
+    listNameElement.textContent = newListName.trim();
+  }
+});
+
+
+renameListButton.addEventListener('click', () => {
+  const listName = listNameInput.value.trim();
+  if (listName) {
+    localStorage.setItem('listName', listName);
+    updateListNameDisplay(listName);
+  } else {
+    messageElement.textContent = 'Please enter a valid name for the list.';
+    setTimeout(() => {
+      messageElement.textContent = '';
+    }, 3000);
+  }
+});
+
+clearListButton.addEventListener('click', () => {
+  if (confirm('Are you sure you want to clear the list?')) {
+    localStorage.removeItem('countData');
+    countListElement.innerHTML = '';
+  }
+});
+
+function updateListNameDisplay(listName: string) {
+  document.title = listName;
+}
+
+const savedListName = localStorage.getItem('listName');
+if (savedListName) {
+  listNameInput.value = savedListName;
+  updateListNameDisplay(savedListName);
+}
+
 function displayCountList(countData: any) {
   countListElement.innerHTML = ''; // Clear the previous count list
 
   Object.entries(countData).forEach(([mainCategory, subCategories]) => {
-    const mainCategoryElement = document.createElement('li');
+    const mainCategoryElement = document.createElement('div');
+    mainCategoryElement.classList.add('main-category');
     mainCategoryElement.textContent = mainCategory;
-    const subCategoryList = document.createElement('ul');
-    mainCategoryElement.appendChild(subCategoryList);
     countListElement.appendChild(mainCategoryElement);
 
     Object.entries(subCategories).forEach(([subCategory, items]) => {
-      const subCategoryElement = document.createElement('li');
+      const subCategoryElement = document.createElement('div');
+      subCategoryElement.classList.add('sub-category');
       subCategoryElement.textContent = subCategory;
-      const itemList = document.createElement('ul');
-      subCategoryElement.appendChild(itemList);
-      subCategoryList.appendChild(subCategoryElement);
+      mainCategoryElement.appendChild(subCategoryElement);
 
       Object.entries(items).forEach(([item, count]) => {
-        if ((count as number) > 0) { // Only display items with a count greater than 0
-          const itemElement = document.createElement('li');
-          itemElement.textContent = `${item}: ${count}`;
-          itemList.appendChild(itemElement);
+        if ((count as number) > 0) {
+          const itemElement = document.createElement('div');
+          itemElement.classList.add('item');
+    
+          const countElement = document.createElement('span');
+          countElement.classList.add('count');
+          countElement.textContent = `${count}`;
+          itemElement.appendChild(countElement);
+    
+          const itemTextElement = document.createElement('span');
+          itemTextElement.classList.add('item-text');
+          itemTextElement.textContent = `\t ${item}`;
+          itemElement.appendChild(itemTextElement);
+    
+          subCategoryElement.appendChild(itemElement);
         }
       });
     });
