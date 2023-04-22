@@ -45,9 +45,9 @@ function populateSubCategories(subCategories: any) {
 
 function populateItems(items: any) {
   itemElement.innerHTML = '';
-  Object.keys(items).forEach(key => {
+  items.forEach((itemName: string) => {
     const optionItem = document.createElement('option');
-    optionItem.textContent = key;
+    optionItem.textContent = itemName;
     itemElement.appendChild(optionItem);
   });
 

@@ -36,9 +36,9 @@ function populateSubCategories(subCategories) {
 }
 function populateItems(items) {
     itemElement.innerHTML = '';
-    Object.keys(items).forEach(key => {
+    items.forEach((itemName) => {
         const optionItem = document.createElement('option');
-        optionItem.textContent = key;
+        optionItem.textContent = itemName;
         itemElement.appendChild(optionItem);
     });
     itemElement.style.display = 'inline';
