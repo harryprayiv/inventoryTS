@@ -1,11 +1,26 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const mainCategoryElement = document.getElementById('mainCategory');
 const subCategoryElement = document.getElementById('subCategory');
 const itemElement = document.getElementById('item');
 const countListElement = document.getElementById('countList');
 fetch('./inventory.json')
-    .then(response => response.json())
-    .then(menuData => {
+    .then((response) => __awaiter(this, void 0, void 0, function* () {
+    const buffer = yield response.arrayBuffer();
+    const hash = yield digestMessage(buffer);
+    const jsonData = new TextDecoder().decode(buffer);
+    return { menuData: JSON.parse(jsonData), hash };
+}))
+    .then(({ menuData, hash }) => {
     populateMainCategories(menuData);
+    localStorage.setItem('sourceHash', hash);
 })
     .catch(error => console.error('Error fetching menu data:', error));
 function populateMainCategories(menuData) {
@@ -46,7 +61,7 @@ function populateItems(items) {
 const incrementButton = document.getElementById('increment');
 const decrementButton = document.getElementById('decrement');
 const countInput = document.getElementById('countInput');
-const messageElement = document.getElementById('message');
+const messageElement = document.getElementById('statusMessage');
 incrementButton.addEventListener('click', () => {
     changeCount(1);
 });
@@ -98,25 +113,19 @@ renameListButton.addEventListener('click', () => {
         updateListNameDisplay(newListName.trim());
     }
 });
-renameListButton.addEventListener('click', () => {
-    const listName = listNameInput.value.trim();
-    if (listName) {
-        localStorage.setItem('listName', listName);
-        updateListNameDisplay(listName);
-    }
-    else {
-        messageElement.textContent = 'Please enter a valid name for the list.';
-        setTimeout(() => {
-            messageElement.textContent = '';
-        }, 3000);
-    }
-});
 clearListButton.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the list?')) {
         localStorage.removeItem('countData');
         countListElement.innerHTML = '';
     }
 });
+function digestMessage(buffer) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const hashBuffer = yield crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    });
+}
 function updateListNameDisplay(listName) {
     listNameElement.textContent = listName;
     document.title = listName;
@@ -127,34 +136,28 @@ if (savedListName) {
     updateListNameDisplay(savedListName);
 }
 function displayCountList(countData) {
-    countListElement.innerHTML = ''; // Clear the previous count list
-    Object.entries(countData).forEach(([mainCategory, subCategories]) => {
-        const mainCategoryElement = document.createElement('div');
-        mainCategoryElement.classList.add('main-category');
-        mainCategoryElement.textContent = mainCategory;
-        countListElement.appendChild(mainCategoryElement);
-        Object.entries(subCategories).forEach(([subCategory, items]) => {
-            const subCategoryElement = document.createElement('div');
-            subCategoryElement.classList.add('sub-category');
-            subCategoryElement.textContent = subCategory;
-            mainCategoryElement.appendChild(subCategoryElement);
-            Object.entries(items).forEach(([item, itemData]) => {
-                if (itemData.count > 0) {
-                    const itemElement = document.createElement('div');
-                    itemElement.classList.add('item');
-                    const countElement = document.createElement('span');
-                    countElement.classList.add('count');
-                    countElement.textContent = `${itemData.count}`;
-                    itemElement.appendChild(countElement);
-                    const itemTextElement = document.createElement('span');
-                    itemTextElement.classList.add('item-text');
-                    itemTextElement.textContent = `\t ${item}`;
-                    itemElement.appendChild(itemTextElement);
-                    subCategoryElement.appendChild(itemElement);
-                }
-            });
-        });
-    });
+    const countListElement = document.getElementById('countList');
+    countListElement.innerHTML = '';
+    // Create table headers
+    const header = countListElement.createTHead();
+    const headerRow = header.insertRow(0);
+    headerRow.insertCell(0).textContent = 'Count';
+    headerRow.insertCell(1).textContent = 'Item';
+    headerRow.insertCell(2).textContent = 'Sub Category';
+    headerRow.insertCell(3).textContent = 'Main Category';
+    // Insert table data
+    for (const mainCategory in countData) {
+        for (const subCategory in countData[mainCategory]) {
+            for (const item in countData[mainCategory][subCategory]) {
+                const count = countData[mainCategory][subCategory][item].count;
+                const row = countListElement.insertRow(-1);
+                row.insertCell(0).textContent = count.toString();
+                row.insertCell(1).textContent = item;
+                row.insertCell(2).textContent = subCategory;
+                row.insertCell(3).textContent = mainCategory;
+            }
+        }
+    }
 }
 displayCountList(getCountData());
 function getCountData() {
@@ -176,7 +179,9 @@ exportListButton.addEventListener('click', () => {
 });
 function exportListAsJSON() {
     const countData = getCountData();
-    const dataString = JSON.stringify(countData, null, 2);
+    const sourceHash = localStorage.getItem('sourceHash');
+    const exportData = Object.assign(Object.assign({}, countData), { sourceHash: sourceHash || '' });
+    const dataString = JSON.stringify(exportData, null, 2);
     const blob = new Blob([dataString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -206,32 +211,43 @@ function generateUniqueId() {
 const visitorId = getVisitorId();
 function handleFileInputChange(event) {
     var _a;
-    const fileInput = event.target;
-    const file = (_a = fileInput.files) === null || _a === void 0 ? void 0 : _a.item(0);
-    if (file && file.type === "application/json") {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            var _a;
-            try {
-                const jsonData = JSON.parse((_a = e.target) === null || _a === void 0 ? void 0 : _a.result);
-                setCountData(jsonData);
-                displayCountList(jsonData);
-            }
-            catch (error) {
-                messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
-                setTimeout(() => {
-                    messageElement.textContent = '';
-                }, 3000);
-            }
-        };
-        reader.readAsText(file);
-    }
-    else {
-        messageElement.textContent = 'Please select a JSON file.';
-        setTimeout(() => {
-            messageElement.textContent = '';
-        }, 3000);
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        const fileInput = event.target;
+        const file = (_a = fileInput.files) === null || _a === void 0 ? void 0 : _a.item(0);
+        if (file && file.type === "application/json") {
+            const reader = new FileReader();
+            reader.onload = (e) => __awaiter(this, void 0, void 0, function* () {
+                var _b;
+                try {
+                    const jsonData = JSON.parse((_b = e.target) === null || _b === void 0 ? void 0 : _b.result);
+                    const storedSourceHash = localStorage.getItem('sourceHash');
+                    const importedSourceHash = jsonData.sourceHash;
+                    if (storedSourceHash !== importedSourceHash) {
+                        messageElement.textContent = 'Warning: Source hash of the imported file does not match the current list source hash.';
+                        setTimeout(() => {
+                            messageElement.textContent = '';
+                        }, 5000);
+                    }
+                    delete jsonData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
+                    setCountData(jsonData);
+                    displayCountList(jsonData);
+                }
+                catch (error) {
+                    messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
+                    setTimeout(() => {
+                        messageElement.textContent = '';
+                    }, 3000);
+                }
+            });
+            reader.readAsText(file);
+        }
+        else {
+            messageElement.textContent = 'Please select a JSON file.';
+            setTimeout(() => {
+                messageElement.textContent = '';
+            }, 3000);
+        }
+    });
 }
 const importListButton = document.getElementById('importList');
 importListButton.addEventListener('change', handleFileInputChange);

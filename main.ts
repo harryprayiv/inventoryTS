@@ -1,7 +1,7 @@
 const mainCategoryElement = document.getElementById('mainCategory') as HTMLSelectElement;
 const subCategoryElement = document.getElementById('subCategory') as HTMLSelectElement;
 const itemElement = document.getElementById('item') as HTMLSelectElement;
-const countListElement = document.getElementById('countList') as HTMLDivElement;
+const countListElement = document.getElementById('countList') as HTMLTableElement;
 
 type ItemData = {
   count: number;
@@ -21,13 +21,19 @@ type CountData = {
 };
 
 fetch('./inventory.json')
-  .then(response => response.json())
-  .then(menuData => {
+  .then(async response => {
+    const buffer = await response.arrayBuffer();
+    const hash = await digestMessage(buffer);
+    const jsonData = new TextDecoder().decode(buffer);
+    return { menuData: JSON.parse(jsonData), hash };
+  })
+  .then(({ menuData, hash }) => {
     populateMainCategories(menuData);
+    localStorage.setItem('sourceHash', hash);
   })
   .catch(error => console.error('Error fetching menu data:', error));
 
-function populateMainCategories(menuData: any): void {
+  function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
   Object.keys(menuData).forEach(key => {
     const optionItem = document.createElement('option');
@@ -73,7 +79,7 @@ function populateItems(items: any) {
 const incrementButton = document.getElementById('increment') as HTMLButtonElement;
 const decrementButton = document.getElementById('decrement') as HTMLButtonElement;
 const countInput = document.getElementById('countInput') as HTMLInputElement;
-const messageElement = document.getElementById('message') as HTMLParagraphElement;
+const messageElement = document.getElementById('statusMessage') as HTMLParagraphElement;
 
 incrementButton.addEventListener('click', () => {
   changeCount(1);
@@ -127,7 +133,6 @@ const renameListButton = document.getElementById('renameList') as HTMLButtonElem
 const clearListButton = document.getElementById('clearList') as HTMLButtonElement;
 const listNameElement = document.getElementById('listName') as HTMLElement;
 
-
 renameListButton.addEventListener('click', () => {
   const currentListName = listNameInput.value;
   const newListName = prompt('Enter the new name for the list:', currentListName);
@@ -137,27 +142,18 @@ renameListButton.addEventListener('click', () => {
   }
 });
 
-
-
-renameListButton.addEventListener('click', () => {
-  const listName = listNameInput.value.trim();
-  if (listName) {
-    localStorage.setItem('listName', listName);
-    updateListNameDisplay(listName);
-  } else {
-    messageElement.textContent = 'Please enter a valid name for the list.';
-    setTimeout(() => {
-      messageElement.textContent = '';
-    }, 3000);
-  }
-});
-
 clearListButton.addEventListener('click', () => {
   if (confirm('Are you sure you want to clear the list?')) {
     localStorage.removeItem('countData');
     countListElement.innerHTML = '';
   }
 });
+
+async function digestMessage(buffer: ArrayBuffer): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 function updateListNameDisplay(listName: string) {
   listNameElement.textContent = listName;
@@ -171,42 +167,32 @@ if (savedListName) {
 }
 
 function displayCountList(countData: CountData) {
-  countListElement.innerHTML = ''; // Clear the previous count list
+  const countListElement = document.getElementById('countList') as HTMLTableElement;
+  countListElement.innerHTML = '';
 
-  Object.entries(countData).forEach(([mainCategory, subCategories]) => {
-    const mainCategoryElement = document.createElement('div');
-    mainCategoryElement.classList.add('main-category');
-    mainCategoryElement.textContent = mainCategory;
-    countListElement.appendChild(mainCategoryElement);
-
-    Object.entries(subCategories).forEach(([subCategory, items]) => {
-      const subCategoryElement = document.createElement('div');
-      subCategoryElement.classList.add('sub-category');
-      subCategoryElement.textContent = subCategory;
-      mainCategoryElement.appendChild(subCategoryElement);
-
-      Object.entries(items).forEach(([item, itemData]: [string, ItemData]) => {
-        if (itemData.count > 0) {
-          const itemElement = document.createElement('div');
-          itemElement.classList.add('item');
-      
-          const countElement = document.createElement('span');
-          countElement.classList.add('count');
-          countElement.textContent = `${itemData.count}`;
-          itemElement.appendChild(countElement);
-      
-          const itemTextElement = document.createElement('span');
-          itemTextElement.classList.add('item-text');
-          itemTextElement.textContent = `\t ${item}`;
-          itemElement.appendChild(itemTextElement);
-      
-          subCategoryElement.appendChild(itemElement);
-        }
-      });
-    });
-  });
+  // Create table headers
+  const header = countListElement.createTHead();
+  const headerRow = header.insertRow(0);
+  headerRow.insertCell(0).textContent = 'Count';
+  headerRow.insertCell(1).textContent = 'Item';
+  headerRow.insertCell(2).textContent = 'Sub Category';
+  headerRow.insertCell(3).textContent = 'Main Category';
+  
+  // Insert table data
+  for (const mainCategory in countData) {
+    for (const subCategory in countData[mainCategory]) {
+      for (const item in countData[mainCategory][subCategory]) {
+        const count = countData[mainCategory][subCategory][item].count;
+        const row = countListElement.insertRow(-1);
+  
+        row.insertCell(0).textContent = count.toString();
+        row.insertCell(1).textContent = item;
+        row.insertCell(2).textContent = subCategory;
+        row.insertCell(3).textContent = mainCategory;
+      }
+    }
+  }
 }
-
 
 displayCountList(getCountData());
 
@@ -232,7 +218,12 @@ exportListButton.addEventListener('click', () => {
 
 function exportListAsJSON() {
   const countData = getCountData();
-  const dataString = JSON.stringify(countData, null, 2);
+  const sourceHash = localStorage.getItem('sourceHash');
+  const exportData = {
+    ...countData,
+    sourceHash: sourceHash || '',
+  };
+  const dataString = JSON.stringify(exportData, null, 2);
   const blob = new Blob([dataString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -266,15 +257,27 @@ function generateUniqueId(): string {
 
 const visitorId = getVisitorId();
 
-function handleFileInputChange(event: Event) {
+async function handleFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
   const file = fileInput.files?.item(0);
 
   if (file && file.type === "application/json") {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
+
+        const storedSourceHash = localStorage.getItem('sourceHash');
+        const importedSourceHash = jsonData.sourceHash;
+
+        if (storedSourceHash !== importedSourceHash) {
+          messageElement.textContent = 'Warning: Source hash of the imported file does not match the current list source hash.';
+          setTimeout(() => {
+            messageElement.textContent = '';
+          }, 5000);
+        }
+
+        delete jsonData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
         setCountData(jsonData);
         displayCountList(jsonData);
       } catch (error) {
