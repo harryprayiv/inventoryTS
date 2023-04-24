@@ -14,9 +14,11 @@
       };
     in rec {
       defaultApp = flake-utils.lib.mkApp {
-        drv = defaultPackage;
+        type = "app";
+        drv = live-server;
       };
-      defaultPackage = pkgs.nodePackages.live-server;
+      live-server = pkgs.nodePackages.live-server;
+      typescript = pkgs.nodePackages.typescript;
     # in {
       devShells.default = pkgs.mkShell {
         buildInputs = [
@@ -33,5 +35,16 @@
           pkgs.nodePackages.typescript-language-server
         ];
       };
+        apps = {
+          live-server = {
+            type = "app";
+            program = "${live-server}/bin/live-server";
+          };
+
+          typescript = {
+            type = "app";
+            program = "${typescript}/bin/typescript";
+          };
+        };
     });
 }

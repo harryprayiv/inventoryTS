@@ -21,7 +21,17 @@ Inventori Amos is a simple web application that allows users to create simple li
 4. Click the "Clear List" button to clear the entire inventory list.
 5. Click the "Export List as JSON" button to download the inventory list as a JSON file.
 
-## Installation and Deployment
+
+## Nix Deployment
+
+To run the Inventory App locally, simply run.
+
+```bash
+nix run github:harryprayiv/inventoryTS#live-server
+
+```
+
+## Installation and Deployment for Non-Nix People
 
 To run the Inventory App locally, clone this repository and open the `index.html` file in a web browser.
 
@@ -30,6 +40,8 @@ git clone https://github.com/harryprayiv/inventoryTS.git
 cd inventoryTS
 
 ```
+
+
 
 To run it in a browser, go here:
 [Inventori Amos Demo](https://glittery-puffpuff-043120.netlify.app/))
