@@ -32,5 +32,5 @@ cd inventoryTS
 ```
 
 To run it in a browser, go here:
-[Inventori Amos Demo](https://www.google.com](https://glittery-puffpuff-043120.netlify.app/))
+[Inventori Amos Demo](https://glittery-puffpuff-043120.netlify.app/))
 
