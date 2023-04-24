@@ -3,6 +3,22 @@ const subCategoryElement = document.getElementById('subCategory') as HTMLSelectE
 const itemElement = document.getElementById('item') as HTMLSelectElement;
 const countListElement = document.getElementById('countList') as HTMLDivElement;
 
+type ItemData = {
+  count: number;
+  addedBy: string;
+};
+
+type SubCategoryData = {
+  [item: string]: ItemData;
+};
+
+type MainCategoryData = {
+  [subCategory: string]: SubCategoryData;
+};
+
+type CountData = {
+  [mainCategory: string]: MainCategoryData;
+};
 
 fetch('./inventory.json')
   .then(response => response.json())
@@ -77,17 +93,22 @@ function changeCount(sign: number) {
 
   if (!countData[mainCategory]) countData[mainCategory] = {};
   if (!countData[mainCategory][subCategory]) countData[mainCategory][subCategory] = {};
-  if (!countData[mainCategory][subCategory][item]) countData[mainCategory][subCategory][item] = 0;
+  if (!countData[mainCategory][subCategory][item]) {
+    countData[mainCategory][subCategory][item] = {
+      count: 0,
+      addedBy: visitorId
+    };
+  }
 
-  if (sign < 0 && countData[mainCategory][subCategory][item] + count < 0) {
-    messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity.`;
+  if (sign < 0 && countData[mainCategory][subCategory][item].count + count < 0) {
+    messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity!`;
     setTimeout(() => {
       messageElement.textContent = '';
     }, 3000);
     return;
   }
 
-  countData[mainCategory][subCategory][item] += count;
+  countData[mainCategory][subCategory][item].count += count;
 
   setCountData(countData);
 
@@ -144,7 +165,7 @@ if (savedListName) {
   updateListNameDisplay(savedListName);
 }
 
-function displayCountList(countData: any) {
+function displayCountList(countData: CountData) {
   countListElement.innerHTML = ''; // Clear the previous count list
 
   Object.entries(countData).forEach(([mainCategory, subCategories]) => {
@@ -159,21 +180,21 @@ function displayCountList(countData: any) {
       subCategoryElement.textContent = subCategory;
       mainCategoryElement.appendChild(subCategoryElement);
 
-      Object.entries(items).forEach(([item, count]) => {
-        if ((count as number) > 0) {
+      Object.entries(items).forEach(([item, itemData]: [string, ItemData]) => {
+        if (itemData.count > 0) {
           const itemElement = document.createElement('div');
           itemElement.classList.add('item');
-    
+      
           const countElement = document.createElement('span');
           countElement.classList.add('count');
-          countElement.textContent = `${count}`;
+          countElement.textContent = `${itemData.count}`;
           itemElement.appendChild(countElement);
-    
+      
           const itemTextElement = document.createElement('span');
           itemTextElement.classList.add('item-text');
           itemTextElement.textContent = `\t ${item}`;
           itemElement.appendChild(itemTextElement);
-    
+      
           subCategoryElement.appendChild(itemElement);
         }
       });
@@ -184,7 +205,7 @@ function displayCountList(countData: any) {
 
 displayCountList(getCountData());
 
-function getCountData(): any {
+function getCountData(): CountData {
   const countDataString = localStorage.getItem('countData');
   if (countDataString) {
     return JSON.parse(countDataString);
@@ -216,3 +237,19 @@ function exportListAsJSON() {
   link.click();
   document.body.removeChild(link);
 }
+
+function getVisitorId(): string {
+  let visitorId = localStorage.getItem('visitorId');
+  if (!visitorId) {
+    visitorId = generateUniqueId();
+    localStorage.setItem('visitorId', visitorId);
+  }
+  return visitorId;
+}
+
+function generateUniqueId(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+const visitorId = getVisitorId();
+
