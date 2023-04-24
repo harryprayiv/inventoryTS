@@ -63,20 +63,24 @@ function changeCount(sign) {
         countData[mainCategory] = {};
     if (!countData[mainCategory][subCategory])
         countData[mainCategory][subCategory] = {};
-    if (!countData[mainCategory][subCategory][item])
-        countData[mainCategory][subCategory][item] = 0;
-    if (sign < 0 && countData[mainCategory][subCategory][item] + count < 0) {
-        messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity.`;
+    if (!countData[mainCategory][subCategory][item]) {
+        countData[mainCategory][subCategory][item] = {
+            count: 0,
+            addedBy: visitorId
+        };
+    }
+    if (sign < 0 && countData[mainCategory][subCategory][item].count + count < 0) {
+        messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity!`;
         setTimeout(() => {
             messageElement.textContent = '';
         }, 3000);
         return;
     }
-    countData[mainCategory][subCategory][item] += count;
+    countData[mainCategory][subCategory][item].count += count;
     setCountData(countData);
     console.log('Updated count:', countData);
     displayCountList(countData);
-    countInput.value = '0';
+    countInput.value = '1';
     messageElement.textContent = `Recorded ${count >= 0 ? 'add' : 'subtract'} ${Math.abs(count)} of ${item}!`;
     setTimeout(() => {
         messageElement.textContent = '';
@@ -87,9 +91,11 @@ const renameListButton = document.getElementById('renameList');
 const clearListButton = document.getElementById('clearList');
 const listNameElement = document.getElementById('listName');
 renameListButton.addEventListener('click', () => {
-    const newListName = prompt('Enter the new name for the list:');
+    const currentListName = listNameInput.value;
+    const newListName = prompt('Enter the new name for the list:', currentListName);
     if (newListName !== null && newListName.trim() !== '') {
-        listNameElement.textContent = newListName.trim();
+        listNameInput.value = newListName.trim();
+        updateListNameDisplay(newListName.trim());
     }
 });
 renameListButton.addEventListener('click', () => {
@@ -112,6 +118,7 @@ clearListButton.addEventListener('click', () => {
     }
 });
 function updateListNameDisplay(listName) {
+    listNameElement.textContent = listName;
     document.title = listName;
 }
 const savedListName = localStorage.getItem('listName');
@@ -131,13 +138,13 @@ function displayCountList(countData) {
             subCategoryElement.classList.add('sub-category');
             subCategoryElement.textContent = subCategory;
             mainCategoryElement.appendChild(subCategoryElement);
-            Object.entries(items).forEach(([item, count]) => {
-                if (count > 0) {
+            Object.entries(items).forEach(([item, itemData]) => {
+                if (itemData.count > 0) {
                     const itemElement = document.createElement('div');
                     itemElement.classList.add('item');
                     const countElement = document.createElement('span');
                     countElement.classList.add('count');
-                    countElement.textContent = `${count}`;
+                    countElement.textContent = `${itemData.count}`;
                     itemElement.appendChild(countElement);
                     const itemTextElement = document.createElement('span');
                     itemTextElement.classList.add('item-text');
@@ -174,8 +181,26 @@ function exportListAsJSON() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'exported_list.json';
+    // Get the list name from the listNameElement and append visitor UUID
+    const listName = listNameElement.textContent || 'Current_Count';
+    const fileName = `${listName}_${visitorId}.json`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, 100);
 }
+function getVisitorId() {
+    let visitorId = localStorage.getItem('visitorId');
+    if (!visitorId) {
+        visitorId = generateUniqueId();
+        localStorage.setItem('visitorId', visitorId);
+    }
+    return visitorId;
+}
+function generateUniqueId() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+const visitorId = getVisitorId();
