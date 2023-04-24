@@ -12,10 +12,13 @@ Inventori Amos is a simple web application that allows users to create simple li
 - Export the inventory list as a JSON file
 - Clear the inventory list
 - Responsive design for use on mobile devices
+- sha256 hash map of list data embedded into list to add some guarantees about list provenance
+- prevents duplicate imports using a hash of imorted files
+- consolidates multiple lists into one count
+- prevents lists of two different types from being added together
 
 ## In Progress
 
-- adding 2ha256 hash map of list data embedded into list to add some guarantees about list provenance
 - QR code sheet generator
 - UI modifications
 
