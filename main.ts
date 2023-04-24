@@ -23,8 +23,8 @@ function showErrorOverlay() {
   overlay.style.zIndex = '9999';
 
   const gifContainer = document.createElement('div');
-  gifContainer.style.width = '200px';
-  gifContainer.style.height = '200px';
+  gifContainer.style.width = '400px';
+  gifContainer.style.height = '400px';
   gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
   gifContainer.style.backgroundSize = 'contain';
   gifContainer.style.backgroundRepeat = 'no-repeat';
@@ -35,7 +35,7 @@ function showErrorOverlay() {
 
   setTimeout(() => {
     document.body.removeChild(overlay);
-  }, 3000);
+  }, 2000);
 }
 
 type SubCategoryData = {
