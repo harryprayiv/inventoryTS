@@ -29,7 +29,9 @@ To run the Inventory App locally, clone this repository and open the `index.html
 git clone https://github.com/harryprayiv/inventoryTS.git
 cd inventoryTS
 
+```
 
 To run it in a browser, go here:
 [![Netlify Status](https://glittery-puffpuff-043120.netlify.app/)
+
 
