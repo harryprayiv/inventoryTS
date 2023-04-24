@@ -15,11 +15,29 @@
       margin-left: 80px;
       white-space: pre;
     }
-  </style>
+    .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .import-export {
+    display: flex;
+    gap: 10px;
+  }
+</style>
   <title>Simple Inventory</title>
 </head>
 <body>
-  <h1>Simple Inventory</h1>
+    <!-- Wrap the <h1> and import/export functionality in a <header> element -->
+    <header class="header">
+      <h1>Simple Inventory</h1>
+      <!-- Wrap the import/export buttons in a <div> with the class "import-export" -->
+      <div class="import-export">
+        <input type="file" id="importList" accept=".json" />
+        <button id="exportList">Export</button>
+      </div>
+    </header>
+
   <!-- <button id="loadMenu">Load Menu</button> -->
   <select id="mainCategory"></select>
   <select id="subCategory" style="display: none;"></select>
@@ -31,8 +49,7 @@
   <h2>
     <span id="listName">NewList</span>
     <button id="renameList">Rename</button>
-    <button id="clearList">Clear List</button>
-    <button id="exportList">Export List as JSON</button>
+    <button id="clearList">Clear</button>
   </h2>
   <div id="countList"></div>
   <script src="main.js" type="module"></script>

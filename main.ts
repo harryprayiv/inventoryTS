@@ -266,3 +266,32 @@ function generateUniqueId(): string {
 
 const visitorId = getVisitorId();
 
+function handleFileInputChange(event: Event) {
+  const fileInput = event.target as HTMLInputElement;
+  const file = fileInput.files?.item(0);
+
+  if (file && file.type === "application/json") {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const jsonData = JSON.parse(e.target?.result as string);
+        setCountData(jsonData);
+        displayCountList(jsonData);
+      } catch (error) {
+        messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
+        setTimeout(() => {
+          messageElement.textContent = '';
+        }, 3000);
+      }
+    };
+    reader.readAsText(file);
+  } else {
+    messageElement.textContent = 'Please select a JSON file.';
+    setTimeout(() => {
+      messageElement.textContent = '';
+    }, 3000);
+  }
+}
+
+const importListButton = document.getElementById('importList') as HTMLInputElement;
+importListButton.addEventListener('change', handleFileInputChange);

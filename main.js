@@ -204,3 +204,34 @@ function generateUniqueId() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 const visitorId = getVisitorId();
+function handleFileInputChange(event) {
+    var _a;
+    const fileInput = event.target;
+    const file = (_a = fileInput.files) === null || _a === void 0 ? void 0 : _a.item(0);
+    if (file && file.type === "application/json") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            var _a;
+            try {
+                const jsonData = JSON.parse((_a = e.target) === null || _a === void 0 ? void 0 : _a.result);
+                setCountData(jsonData);
+                displayCountList(jsonData);
+            }
+            catch (error) {
+                messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                }, 3000);
+            }
+        };
+        reader.readAsText(file);
+    }
+    else {
+        messageElement.textContent = 'Please select a JSON file.';
+        setTimeout(() => {
+            messageElement.textContent = '';
+        }, 3000);
+    }
+}
+const importListButton = document.getElementById('importList');
+importListButton.addEventListener('change', handleFileInputChange);
