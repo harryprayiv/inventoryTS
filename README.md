@@ -34,7 +34,9 @@ Inventori Amos is a simple web application that allows users to create simple li
 To run the Inventory App locally, simply run.
 
 ```bash
-nix run github:harryprayiv/inventoryTS#live-server
+git clone https://github.com/harryprayiv/inventoryTS.git
+cd inventoryTS
+nix run .#live-server
 
 ```
 
