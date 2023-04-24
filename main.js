@@ -66,7 +66,7 @@ function changeCount(sign) {
     if (!countData[mainCategory][subCategory][item])
         countData[mainCategory][subCategory][item] = 0;
     if (sign < 0 && countData[mainCategory][subCategory][item] + count < 0) {
-        messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity!`;
+        messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity.`;
         setTimeout(() => {
             messageElement.textContent = '';
         }, 3000);
@@ -162,4 +162,20 @@ function getCountData() {
 function setCountData(countData) {
     const countDataString = JSON.stringify(countData);
     localStorage.setItem('countData', countDataString);
+}
+const exportListButton = document.getElementById('exportList');
+exportListButton.addEventListener('click', () => {
+    exportListAsJSON();
+});
+function exportListAsJSON() {
+    const countData = getCountData();
+    const dataString = JSON.stringify(countData, null, 2);
+    const blob = new Blob([dataString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'exported_list.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
