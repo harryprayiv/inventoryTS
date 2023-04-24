@@ -8,6 +8,36 @@ type ItemData = {
   addedBy: string;
 };
 
+function showErrorOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'errorOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.zIndex = '9999';
+
+  const gifContainer = document.createElement('div');
+  gifContainer.style.width = '200px';
+  gifContainer.style.height = '200px';
+  gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
+  gifContainer.style.backgroundSize = 'contain';
+  gifContainer.style.backgroundRepeat = 'no-repeat';
+  gifContainer.style.backgroundPosition = 'center center';
+
+  overlay.appendChild(gifContainer);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    document.body.removeChild(overlay);
+  }, 3000);
+}
+
 type SubCategoryData = {
   [item: string]: ItemData;
 };
@@ -31,7 +61,10 @@ fetch('./inventory.json')
     populateMainCategories(menuData);
     localStorage.setItem('sourceHash', hash);
   })
-  .catch(error => console.error('Error fetching menu data:', error));
+  .catch(error => {
+    console.error('Error fetching menu data:', error);
+    showErrorOverlay();
+  });
 
   function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
@@ -302,6 +335,7 @@ async function handleFileInputChange(event: Event) {
         // Update the list of imported file hashes
         updateImportedFileHashes(fileHash);
       } catch (error) {
+        showErrorOverlay();
         messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
         setTimeout(() => {
           messageElement.textContent = '';
