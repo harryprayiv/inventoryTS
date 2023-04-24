@@ -11,6 +11,41 @@ const mainCategoryElement = document.getElementById('mainCategory');
 const subCategoryElement = document.getElementById('subCategory');
 const itemElement = document.getElementById('item');
 const countListElement = document.getElementById('countList');
+const importInventoryButton = document.getElementById('importInventory');
+importInventoryButton.addEventListener('change', handleInventoryFileInputChange);
+function handleInventoryFileInputChange(event) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const fileInput = event.target;
+        const file = (_a = fileInput.files) === null || _a === void 0 ? void 0 : _a.item(0);
+        if (file && file.type === "application/json") {
+            const reader = new FileReader();
+            reader.onload = (e) => __awaiter(this, void 0, void 0, function* () {
+                var _b;
+                try {
+                    const inventoryData = JSON.parse((_b = e.target) === null || _b === void 0 ? void 0 : _b.result);
+                    // Now you have the inventory data, call your existing function
+                    // to populate the inventory items using this data
+                    populateMainCategories(inventoryData);
+                }
+                catch (error) {
+                    showErrorOverlay();
+                    messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
+                    setTimeout(() => {
+                        messageElement.textContent = '';
+                    }, 3000);
+                }
+            });
+            reader.readAsText(file);
+        }
+        else {
+            messageElement.textContent = 'Please select a JSON file.';
+            setTimeout(() => {
+                messageElement.textContent = '';
+            }, 3000);
+        }
+    });
+}
 function showErrorOverlay() {
     const overlay = document.createElement('div');
     overlay.id = 'errorOverlay';

@@ -2,11 +2,43 @@ const mainCategoryElement = document.getElementById('mainCategory') as HTMLSelec
 const subCategoryElement = document.getElementById('subCategory') as HTMLSelectElement;
 const itemElement = document.getElementById('item') as HTMLSelectElement;
 const countListElement = document.getElementById('countList') as HTMLTableElement;
+const importInventoryButton = document.getElementById('importInventory') as HTMLInputElement;
+importInventoryButton.addEventListener('change', handleInventoryFileInputChange);
+
 
 type ItemData = {
   count: number;
   addedBy: string;
 };
+
+async function handleInventoryFileInputChange(event: Event) {
+  const fileInput = event.target as HTMLInputElement;
+  const file = fileInput.files?.item(0);
+
+  if (file && file.type === "application/json") {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const inventoryData = JSON.parse(e.target?.result as string);
+        // Now you have the inventory data, call your existing function
+        // to populate the inventory items using this data
+        populateMainCategories(inventoryData);
+      } catch (error) {
+        showErrorOverlay();
+        messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
+        setTimeout(() => {
+          messageElement.textContent = '';
+        }, 3000);
+      }
+    };
+    reader.readAsText(file);
+  } else {
+    messageElement.textContent = 'Please select a JSON file.';
+    setTimeout(() => {
+      messageElement.textContent = '';
+    }, 3000);
+  }
+}
 
 function showErrorOverlay() {
   const overlay = document.createElement('div');
