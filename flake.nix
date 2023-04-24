@@ -12,7 +12,12 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-    in {
+    in rec {
+      defaultApp = flake-utils.lib.mkApp {
+        drv = defaultPackage;
+      };
+      defaultPackage = pkgs.nodePackages.live-server;
+    # in {
       devShells.default = pkgs.mkShell {
         buildInputs = [
           pkgs.nodejs
