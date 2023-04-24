@@ -262,13 +262,25 @@ async function handleFileInputChange(event: Event) {
   const file = fileInput.files?.item(0);
 
   if (file && file.type === "application/json") {
+    const buffer = await file.arrayBuffer();
+    const fileHash = await digestMessage(buffer);
+    const importedFileHashes = getImportedFileHashes();
+
+    if (importedFileHashes.includes(fileHash)) {
+      messageElement.textContent = 'This file has already been imported.';
+      setTimeout(() => {
+        messageElement.textContent = '';
+      }, 3000);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
-        const jsonData = JSON.parse(e.target?.result as string);
+        const importedData = JSON.parse(e.target?.result as string);
 
         const storedSourceHash = localStorage.getItem('sourceHash');
-        const importedSourceHash = jsonData.sourceHash;
+        const importedSourceHash = importedData.sourceHash;
 
         if (storedSourceHash !== importedSourceHash) {
           messageElement.textContent = 'Warning: Source hash of the imported file does not match the current list source hash.';
@@ -277,9 +289,18 @@ async function handleFileInputChange(event: Event) {
           }, 5000);
         }
 
-        delete jsonData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
-        setCountData(jsonData);
-        displayCountList(jsonData);
+        delete importedData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
+
+        const currentData = getCountData();
+
+        // Merge the imported data with the current data
+        const mergedData = mergeCountData(currentData, importedData);
+
+        setCountData(mergedData);
+        displayCountList(mergedData);
+
+        // Update the list of imported file hashes
+        updateImportedFileHashes(fileHash);
       } catch (error) {
         messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
         setTimeout(() => {
@@ -296,5 +317,49 @@ async function handleFileInputChange(event: Event) {
   }
 }
 
+function getImportedFileHashes(): string[] {
+  const importedFileHashesString = localStorage.getItem('importedFileHashes');
+  if (importedFileHashesString) {
+    return JSON.parse(importedFileHashesString);
+  } else {
+    return [];
+  }
+}
+
+function updateImportedFileHashes(newHash: string): void {
+  const importedFileHashes = getImportedFileHashes();
+  importedFileHashes.push(newHash);
+  localStorage.setItem('importedFileHashes', JSON.stringify(importedFileHashes));
+}
+
 const importListButton = document.getElementById('importList') as HTMLInputElement;
 importListButton.addEventListener('change', handleFileInputChange);
+
+
+function mergeCountData(currentData: CountData, importedData: CountData): CountData {
+  const result: CountData = JSON.parse(JSON.stringify(currentData));
+
+  for (const mainCategory in importedData) {
+    if (!result[mainCategory]) {
+      result[mainCategory] = importedData[mainCategory];
+    } else {
+      for (const subCategory in importedData[mainCategory]) {
+        if (!result[mainCategory][subCategory]) {
+          result[mainCategory][subCategory] = importedData[mainCategory][subCategory];
+        } else {
+          for (const item in importedData[mainCategory][subCategory]) {
+            if (!result[mainCategory][subCategory][item]) {
+              result[mainCategory][subCategory][item] = importedData[mainCategory][subCategory][item];
+            } else {
+              const currentCount = result[mainCategory][subCategory][item].count;
+              const importedCount = importedData[mainCategory][subCategory][item].count;
+              result[mainCategory][subCategory][item].count = currentCount + importedCount;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
