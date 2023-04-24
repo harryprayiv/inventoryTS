@@ -13,6 +13,13 @@ Inventori Amos is a simple web application that allows users to create simple li
 - Clear the inventory list
 - Responsive design for use on mobile devices
 
+## In Progress
+
+- adding 2ha256 hash map of list data embedded into list to add some guarantees about list provenance
+- QR code sheet generator
+- UI modifications
+
+
 ## How to Use
 
 1. Select a main category, sub-category, and item from the dropdown menus.
