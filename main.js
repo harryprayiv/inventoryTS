@@ -172,8 +172,8 @@ function displayCountList(countData) {
     const headerRow = header.insertRow(0);
     headerRow.insertCell(0).textContent = 'Count';
     headerRow.insertCell(1).textContent = 'Item';
-    headerRow.insertCell(2).textContent = 'Sub Category';
-    headerRow.insertCell(3).textContent = 'Main Category';
+    headerRow.insertCell(2).textContent = 'Type';
+    headerRow.insertCell(3).textContent = 'Category';
     // Insert table data
     for (const mainCategory in countData) {
         for (const subCategory in countData[mainCategory]) {
