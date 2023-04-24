@@ -172,8 +172,8 @@ function displayCountList(countData) {
     const headerRow = header.insertRow(0);
     headerRow.insertCell(0).textContent = 'Count';
     headerRow.insertCell(1).textContent = 'Item';
-    headerRow.insertCell(2).textContent = 'Type';
-    headerRow.insertCell(3).textContent = 'Category';
+    headerRow.insertCell(2).textContent = 'Sub Category';
+    headerRow.insertCell(3).textContent = 'Main Category';
     // Insert table data
     for (const mainCategory in countData) {
         for (const subCategory in countData[mainCategory]) {
@@ -248,6 +248,7 @@ function handleFileInputChange(event) {
             const fileHash = yield digestMessage(buffer);
             const importedFileHashes = getImportedFileHashes();
             if (importedFileHashes.includes(fileHash)) {
+                showErrorOverlay();
                 messageElement.textContent = 'This file has already been imported.';
                 setTimeout(() => {
                     messageElement.textContent = '';
@@ -262,6 +263,7 @@ function handleFileInputChange(event) {
                     const storedSourceHash = localStorage.getItem('sourceHash');
                     const importedSourceHash = importedData.sourceHash;
                     if (storedSourceHash !== importedSourceHash) {
+                        showErrorOverlay();
                         messageElement.textContent = 'Warning: Source hash of the imported file does not match the current list source hash.';
                         setTimeout(() => {
                             messageElement.textContent = '';
