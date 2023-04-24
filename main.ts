@@ -115,7 +115,7 @@ function changeCount(sign: number) {
   console.log('Updated count:', countData);
   displayCountList(countData);
 
-  countInput.value = '0';
+  countInput.value = '1';
   messageElement.textContent = `Recorded ${count >= 0 ? 'add' : 'subtract'} ${Math.abs(count)} of ${item}!`;
   setTimeout(() => {
     messageElement.textContent = '';
@@ -125,14 +125,18 @@ function changeCount(sign: number) {
 const listNameInput = document.getElementById('listName') as HTMLInputElement;
 const renameListButton = document.getElementById('renameList') as HTMLButtonElement;
 const clearListButton = document.getElementById('clearList') as HTMLButtonElement;
-const listNameElement = document.getElementById('listName') as HTMLSpanElement;
+const listNameElement = document.getElementById('listName') as HTMLElement;
+
 
 renameListButton.addEventListener('click', () => {
-  const newListName = prompt('Enter the new name for the list:');
+  const currentListName = listNameInput.value;
+  const newListName = prompt('Enter the new name for the list:', currentListName);
   if (newListName !== null && newListName.trim() !== '') {
-    listNameElement.textContent = newListName.trim();
+    listNameInput.value = newListName.trim();
+    updateListNameDisplay(newListName.trim());
   }
 });
+
 
 
 renameListButton.addEventListener('click', () => {
@@ -156,6 +160,7 @@ clearListButton.addEventListener('click', () => {
 });
 
 function updateListNameDisplay(listName: string) {
+  listNameElement.textContent = listName;
   document.title = listName;
 }
 
@@ -232,10 +237,18 @@ function exportListAsJSON() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'exported_list.json';
+
+  // Get the list name from the listNameElement and append visitor UUID
+  const listName = listNameElement.textContent || 'Current_Count';
+  const fileName = `${listName}_${visitorId}.json`;
+
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 100);
 }
 
 function getVisitorId(): string {
