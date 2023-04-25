@@ -109,11 +109,12 @@
       <h1>Inventori</h1>
       <!-- Wrap the import/export buttons in a <div> with the class "import-export" -->
       <div class="import-export">
+        <button id="clearBrowserDataButton">Clear All</button>
         <label for="importInventory">Load Custom List</label>
         <input type="file" id="importInventory" accept=".json" class="hidden">
         <label for="importList">Import/Consolidate Counts</label>
         <input type="file" id="importList" accept=".json" class="hidden" />
-        <button id="exportList">Export Counts</button>
+        <button id="exportList">Export Current Count</button>
       </div>
     </header>
   <select id="mainCategory"></select>

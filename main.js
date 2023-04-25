@@ -13,6 +13,24 @@ const itemElement = document.getElementById('item');
 const countListElement = document.getElementById('countList');
 const importInventoryButton = document.getElementById('importInventory');
 importInventoryButton.addEventListener('change', handleInventoryFileInputChange);
+const clearBrowserDataButton = document.getElementById('clearBrowserDataButton');
+clearBrowserDataButton.addEventListener('click', clearAllBrowserData);
+function clearAllBrowserData() {
+    if (confirm('Are you sure you want to clear all browser data for this page?')) {
+        // List all the keys you want to remove from the local storage
+        const keysToRemove = [
+            'countData',
+            'listName',
+            'sourceHash',
+            'visitorId',
+            'importedFileHashes',
+        ];
+        // Remove each key from the local storage
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // Optionally, reload the page to reflect the changes
+        window.location.reload();
+    }
+}
 function handleInventoryFileInputChange(event) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {

@@ -5,11 +5,32 @@ const countListElement = document.getElementById('countList') as HTMLTableElemen
 const importInventoryButton = document.getElementById('importInventory') as HTMLInputElement;
 importInventoryButton.addEventListener('change', handleInventoryFileInputChange);
 
+const clearBrowserDataButton = document.getElementById('clearBrowserDataButton');
+clearBrowserDataButton.addEventListener('click', clearAllBrowserData);
 
 type ItemData = {
   count: number;
   addedBy: string;
 };
+
+function clearAllBrowserData() {
+  if (confirm('Are you sure you want to clear all browser data for this page?')) {
+    // List all the keys you want to remove from the local storage
+    const keysToRemove = [
+      'countData',
+      'listName',
+      'sourceHash',
+      'visitorId',
+      'importedFileHashes',
+    ];
+
+    // Remove each key from the local storage
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // Optionally, reload the page to reflect the changes
+    window.location.reload();
+  }
+}
 
 async function handleInventoryFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
