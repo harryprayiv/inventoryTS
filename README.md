@@ -1,6 +1,6 @@
-# Inventori Amos
+# Inventori
 
-Inventori Amos is a simple web application that allows users to create simple lists of gear, organizing them into main categories, sub-categories, and individual items. Users can increment or decrement the count of items as needed, rename the inventory list, and export the list as a JSON file.
+Inventori is a simple web application that allows users to create simple lists of gear, organizing them into main categories, sub-categories, and individual items. Users can increment or decrement the count of items as needed, rename the inventory list, and export the list as a JSON file.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/77991343-af4e-4913-be94-f1789ca2981d/deploy-status)](https://app.netlify.com/sites/glittery-puffpuff-043120/deploys)
 
@@ -12,16 +12,22 @@ Inventori Amos is a simple web application that allows users to create simple li
 - Export the inventory list as a JSON file
 - Clear the inventory list
 - Responsive design for use on mobile devices
-- sha256 hash map of list data embedded into list to add some guarantees about list provenance
-- prevents duplicate imports using a hash of imorted files
-- consolidates multiple lists into one count
-- prevents lists of two different types from being added together
+- Sha256 hash map of list data embedded into list to add some guarantees about list provenance
+- Prevents duplicate imports using a hash of imorted files
+- Consolidates multiple lists into one count
+- Prevents lists of two different types from being added together
 
 ## In Progress
 
+- Import Rental House Order for Checkout
+- Create Document to Submit Order for Rental House
+- Import/Checkout
 - QR code sheet generator
-- UI modifications
-
+- In-Browser Editable source list
+- Metadata Tagging of Already Populated Counts (for logistics tracking)
+- Export CSV
+- Export PDF
+- Item information Encoded into a QR Code
 
 ## How to Use
 
@@ -34,7 +40,7 @@ Inventori Amos is a simple web application that allows users to create simple li
 
 ## Nix Deployment
 
-To run the Inventory App locally, simply run.
+To run the Inventory App locally, run.
 
 ```bash
 git clone https://github.com/harryprayiv/inventoryTS.git
