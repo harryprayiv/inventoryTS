@@ -206,7 +206,7 @@
         "addedBy": "dw7mols8fzommhkrrj1ip"
       },
       "RDM Opti-splitter": {
-        "count": 100,
+        "count": 5,
         "addedBy": "dw7mols8fzommhkrrj1ip"
       },
       "Ethernet to Female DMX Adapter": {
@@ -215,5 +215,5 @@
       }
     }
   },
-  "sourceHash": "a642c9a1b37eb35a841469192b734bf514290f695945eb645c51172db9e43571"
+  "sourceHash": "cfcbff038050a2c2438a71b5b5193faef5cfb22e2803d4c7264f0e32cade2583"
 }
