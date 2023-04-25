@@ -106,15 +106,14 @@
 <body>
   <!-- Wrap the <h1> and import/export functionality in a <header> element -->
     <header class="header">
-      <h1>Inventori</h1>
+      <h1><span id="listName">NewCount</span>
+      </h1>
       <!-- Wrap the import/export buttons in a <div> with the class "import-export" -->
       <div class="import-export">
-        <button id="clearBrowserDataButton">Clear All</button>
-        <label for="importInventory">Load Custom List</label>
-        <input type="file" id="importInventory" accept=".json" class="hidden">
-        <label for="importList">Import/Consolidate Counts</label>
+        <button id="renameList">Rename</button>
+        <label for="importList">Import Count</label>
         <input type="file" id="importList" accept=".json" class="hidden" />
-        <button id="exportList">Export Current Count</button>
+        <button id="exportList">Export Count</button>
       </div>
     </header>
   <select id="mainCategory"></select>
@@ -123,13 +122,8 @@
   <button id="increment"> + </button>
   <button id="decrement"> - </button>
   <input id="countInput" type="number" value="1" min="1" step="1">
-  <div class="rename-clear">
-    <button id="renameList">Rename</button>
-    <button id="clearList">Clear</button>
-  </div>
-  <div class="title">
-    <span id="listName">NewList</span>
-  </div>
+  <label for="importInventory">Import List</label>
+  <input type="file" id="importInventory" accept=".json" class="hidden">
   <table id="countList">
     <thead>
       <tr>
@@ -142,5 +136,7 @@
   </table>
   <script src="main.js" type="module"></script>
 </body>
+<button id="clearList">Clear Count</button>
+<button id="clearBrowserDataButton">Clear ALL</button>
 <div id="statusMessage" style="position: fixed; color: red; bottom: 0; width: 100%; text-align: center;"></div>
 </html>

@@ -57,7 +57,7 @@ async function handleInventoryFileInputChange(event: Event) {
     messageElement.textContent = 'Please select a JSON file.';
     setTimeout(() => {
       messageElement.textContent = '';
-    }, 3000);
+    }, 5500);
   }
 }
 
@@ -197,7 +197,7 @@ function changeCount(sign: number) {
     messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity!`;
     setTimeout(() => {
       messageElement.textContent = '';
-    }, 3000);
+    }, 5500);
     return;
   }
 
@@ -373,7 +373,7 @@ async function handleFileInputChange(event: Event) {
 
         if (storedSourceHash !== importedSourceHash) {
           showErrorOverlay();
-          messageElement.textContent = 'Warning: Source hash of the imported file does not match the current list source hash.';
+          messageElement.textContent = 'Warning: The source of the imported file is not identical to the current source file.';
           setTimeout(() => {
             messageElement.textContent = '';
           }, 5000);
@@ -404,7 +404,7 @@ async function handleFileInputChange(event: Event) {
     messageElement.textContent = 'Please select a JSON file.';
     setTimeout(() => {
       messageElement.textContent = '';
-    }, 3000);
+    }, 5500);
   }
 }
 
