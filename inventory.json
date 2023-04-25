@@ -2,18 +2,18 @@
   "Rigging": {
     "Camlock": [
       "100' 4/0",
+      "50'  4/0",
+      "25'  4/0",
       "100' 2/0",
-      "50' 4/0",
-      "50' 2/0",
+      "50'  2/0",
+      "25'  2/0",
       "50' Banded",
-      "25' 4/0",
-      "25' 2/0",
       "Banded Jumper",
       "2/0 Jumper",
       "4/0 Jumper",
       "110V Snakebite (Female Bates)",
-      "220V Snakebite (Female Bates)",
       "110V Backbite (Male Bates)",
+      "220V Snakebite (Female Bates)",
       "220V Backbite (Male Bates)"
     ],
     "Distro": [

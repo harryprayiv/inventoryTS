@@ -172,6 +172,7 @@ function changeCount(sign: number) {
   }
 
   if (sign < 0 && countData[mainCategory][subCategory][item].count + count < 0) {
+    showErrorOverlay();
     messageElement.textContent = `Cannot subtract ${Math.abs(count)} from ${item} as it doesn't have enough quantity!`;
     setTimeout(() => {
       messageElement.textContent = '';
@@ -211,6 +212,7 @@ clearListButton.addEventListener('click', () => {
   if (confirm('Are you sure you want to clear the list?')) {
     localStorage.removeItem('countData');
     countListElement.innerHTML = '';
+    clearImportedFileHashes(); // Add this line to clear imported file hashes except the source hash
   }
 });
 
@@ -430,4 +432,13 @@ function mergeCountData(currentData: CountData, importedData: CountData): CountD
   }
 
   return result;
+}
+
+function clearImportedFileHashes(): void {
+  const sourceHash = localStorage.getItem('sourceHash');
+  if (sourceHash) {
+    localStorage.setItem('importedFileHashes', JSON.stringify([sourceHash]));
+  } else {
+    localStorage.removeItem('importedFileHashes');
+  }
 }
