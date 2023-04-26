@@ -286,7 +286,7 @@ exportListButton.addEventListener('click', () => {
   exportListAsJSON();
 });
 
-function exportListAsJSON() {
+function exportListAsJSON(): void {
   const countData = getCountData();
   const sourceHash = localStorage.getItem('sourceHash');
   const exportData = {
