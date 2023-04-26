@@ -137,15 +137,15 @@
       "Creamsource Space X", 
       "Creamsource Micro Colour", 
       "Creamsource Micro Bender", 
-      "Astera Original 4'",
-      "Astera Helios 2' Tube",
-      "Astera Titan 4' Tube",
+      "Astera Titan    4' Tube",
+      "Astera Helios   2' Tube",
       "Astera Hyperion 8' Tube",
       "Astera AX9 PowerPAR",
       "Astera AX5 TriplePAR",
       "Astera NYX Bulb",
       "Astera Hydrapanel",
       "Astera A-box w/ tablet",
+      "Astera Original 4'",
       "Arri S30-C",
       "Arri S30-C3",
       "Arri S60-C",
@@ -166,7 +166,6 @@
       "StudioForce 72",
       "ColorForce  72",
       "ColorForce 72 MKII"
-
     ],
     "HMI": [
       "ArriMax 18K HMI",
