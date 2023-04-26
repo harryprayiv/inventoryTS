@@ -2,26 +2,17 @@ module Main where
 
 import Prelude
 
--- import Control.Monad.Aff (Aff, later', makeAff)
--- import Control.Monad.Eff.Console (log)
 import Control.Monad.Except (throwError)
 import Data.Array (head)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Functor (($>))
 import Data.Int (toNumber)
--- import Data.JSON.Decode (decodeJSON)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Nullable (toNullable)
--- import DOM (DOM)
--- import DOM.Event.EventTarget (dispatchEvent)
--- import DOM.File.File (file)
--- import DOM.File.FileList (item)
--- import DOM.File.FileReader (newFileReader, readAsText)
--- import DOM.File.Types (File, FileReader)
--- import DOM.HTML.Types (ElementType(..), HTMLElement, HTMLSelectElement, HTMLTableElement, HTMLInputElement, HTMLButtonElement, HTMLParagraphElement)
--- import DOM.HTML.HTMLElement (innerText)
--- import DOM.HTML.HTMLSelectElement as SelectElement
+import Data.Time.Duration (Milliseconds(..))
+import Data.Time.Clock.POSIX (posixTime)
+import Effect.Random (random)
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (logShow)
@@ -30,14 +21,22 @@ import Effect.Ref (Ref, new, read, write)
 import Foreign.Object as FO
 import Web.Event.Event (Event, EventType(..), event)
 import Web.HTML (window)
-import Web.HTML.HTMLInputElement as HTMLInputElement
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window as Window
+import Web.Storage (Storage, getItem, setItem)
+import Web.Storage.LocalStorage (localStorage)
+
 
 type ItemData =
   { count :: Int
   , addedBy :: String
   }
+
+newtype UniqueId = UniqueId String
+derive instance newtypeUniqueId :: Newtype UniqueId _
+
+instance showUniqueId :: Show UniqueId where
+  show (UniqueId s) = s
 
 type SubCategoryData =
   FO.Object ItemData
@@ -100,7 +99,7 @@ unsafeCoerceElement = pure <<< unsafeCoerce
 addEventListener :: EventType -> (Event -> Aff Unit) -> HTMLElement -> Aff Unit
 addEventListener eventType handler element = do
   wrappedHandler <- Event.wrapEventHandler handler
-  Event.addEventListener eventType wrapped
+  Event.addEventListener eventType wrappedHandler element
 
 countData mainCategory subCategory item { count } = count + count
 
@@ -118,75 +117,82 @@ changeCount count mainCategoryElement subCategoryElement itemElement countInput 
   displayCountList newCountData
   liftEffect $ setInputValue countInput "1"
   liftEffect $ HTMLElement.setTextContent ("Recorded " <> (if count >= 0 then "add" else "subtract") <> " " <> show (abs count) <> " of " <> item <> "!") messageElement
-  setTimeout 3000 $ liftEffect $ \_ -> messageElement.textContent = ""
+  setTimeout 3000 $ liftEffect $ \_ -> HTMLElement.setTextContent "" messageElement
 
-    
-listNameInput <- getElementById "listName" >>= unsafeCoerceElement
-renameListButton <- getElementById "renameList" >>= unsafeCoerceElement
-clearListButton <- getElementById "clearList" >>= unsafeCoerceElement
-listNameElement <- getElementById "listName" >>= unsafeCoerceElement
+  listNameInput <- getElementById "listName" >>= unsafeCoerceElement
+  renameListButton <- getElementById "renameList" >>= unsafeCoerceElement
+  clearListButton <- getElementById "clearList" >>= unsafeCoerceElement
+  listNameElement <- getElementById "listName" >>= unsafeCoerceElement
 
-renameListButton `onClick` do
-  currentListName <- listNameInput.value
+renameListButtonOnClick :: HTMLElement -> HTMLElement -> Aff Unit
+renameListButtonOnClick renameListButton listNameInput = do
+  currentListName <- liftEffect $ HTMLInputElement.getValue listNameInput
   newListName <- prompt "Enter the new name for the list:" currentListName
   case newListName of
     Just name | name /= "" -> do
-      listNameInput.value = name
+      liftEffect $ HTMLInputElement.setValue listNameInput name
       updateListNameDisplay name
     _ -> pure unit
 
-clearListButton `onClick` do
-  confirmResult <- confirm "Are you sure you want to clear the list?"
-  when confirmResult do
-    removeItem "countData"
-    countListElement.innerHTML = ""
-    clearImportedFileHashes
+clearListButtonOnClick :: HTMLElement -> HTMLElement -> Aff Unit
+clearListButtonOnClick clearListButton countListElement = do
+  clearListButton `addEventListener` "click" \_ -> do
+    confirmResult <- confirm "Are you sure you want to clear the list?"
+    when confirmResult do
+      liftEffect $ removeItem "countData"
+      liftEffect $ HTMLElement.setInnerHTML "" countListElement
+      liftEffect clearImportedFileHashes
 
 setInputValue :: HTMLElement -> String -> Effect Unit
 setInputValue element value = do
   input <- HTMLInputElement.fromElement element
   HTMLInputElement.setValue value input
 
-
+-- Implement digestMessage function using crypto.subtle.digest
 digestMessage :: ArrayBuffer -> Effect String
-digestMessage = -- Implement digestMessage function using crypto.subtle.digest
+digestMessage = undefined
 
 updateListNameDisplay :: String -> Effect Unit
 updateListNameDisplay listName = do
-  listNameElement.textContent = listName
-  document.title = listName
+  listNameElement <- getElementById "listName" >>= unsafeCoerceElement
+  HTMLElement.setTextContent listName listNameElement
+  document <- Document.window >>= HTMLDocument.document
+  Document.setTitle listName document
 
-savedListName <- getItem "listName"
-for_ savedListName \name -> do
-  listNameInput.value = name
-  updateListNameDisplay name
+-- savedListName <- liftEffect $ getItem "listName"
+-- for_ savedListName \name -> do
+--   liftEffect $ HTMLInputElement.setValue listNameInput name
+--   updateListNameDisplay name
 
 displayCountList :: CountData -> Effect Unit
 displayCountList countData = do
   countListElement <- getElementById "countList" >>= unsafeCoerceElement
-  countListElement.innerHTML = ""
+  HTMLElement.setInnerHTML "" countListElement
 
   -- Create table headers
-  header <- countListElement.createTHead
-  headerRow <- header.insertRow 0
-  (headerRow.insertCell 0).textContent = "Count"
-  (headerRow.insertCell 1).textContent = "Item"
-  (headerRow.insertCell 2).textContent = "Type"
-  (headerRow.insertCell 3).textContent = "Category"
+  header <- HTMLElement.createTHead countListElement
+  headerRow <- HTMLTableElement.insertRow 0 header
+  _ <- setElemTextContent "Count" =<< HTMLTableRowElement.insertCell 0 headerRow
+  _ <- setElemTextContent "Item" =<< HTMLTableRowElement.insertCell 1 headerRow
+  _ <- setElemTextContent "Type" =<< HTMLTableRowElement.insertCell 2 headerRow
+  _ <- setElemTextContent "Category" =<< HTMLTableRowElement.insertCell 3 headerRow
 
   -- Insert table data
-  for mainCategory countData \mainCategoryData ->
-    for subCategory mainCategoryData \subCategoryData ->
-      for item subCategoryData \itemData -> do
+  for_ countData \mainCategoryData ->
+    for_ mainCategoryData \subCategoryData ->
+      for_ subCategoryData \itemData -> do
         let count = itemData.count
-        row <- countListElement.insertRow -1
+        row <- HTMLTableElement.insertRow (-1) countListElement
+        _ <- setElemTextContent (show count) =<< HTMLTableRowElement.insertCell 0 row
+        _ <- setElemTextContent item =<< HTMLTableRowElement.insertCell 1 row
+        _ <- setElemTextContent subCategory =<< HTMLTableRowElement.insertCell 2 row
+        _ <- setElemTextContent mainCategory =<< HTMLTableRowElement.insertCell 3 row
 
-        (row.insertCell 0).textContent = show count
-        (row.insertCell 1).textContent = item
-        (row.insertCell 2).textContent = subCategory
-        (row.insertCell 3).textContent = mainCategory
+  where
+    setElemTextContent :: String -> HTMLElement -> Effect Unit
+    setElemTextContent content elem = HTMLElement.setTextContent content elem
 
-displayCountList (getCountData)
+  -- displayCountList (getCountData)
 
 getCountData :: Effect CountData
 getCountData = do
@@ -200,40 +206,53 @@ setCountData countData =
   let countDataString = encodeJSON countData
   in setItem "countData" countDataString
 
-exportListButton <- getElementById "exportList" >>= unsafeCoerceElement
+exportListButtonOnClick :: HTMLElement -> Aff Unit
+exportListButtonOnClick exportListButton = do
+  exportListButton `addEventListener` (EventType "click") \_ -> do
+    exportListAsJSON
 
-exportListButton `onClick` do
-  exportListAsJSON
-
-exportListAsJSON :: Effect Unit
+exportListAsJSON :: Aff Unit
 exportListAsJSON = do
-  countData <- getCountData
-  sourceHash <- getItem "sourceHash"
+  countData <- liftEffect getCountData
+  sourceHash <- liftEffect getItem "sourceHash"
   let exportData = (sourceHash <|> "") : countData
   let dataString = encodeJSON exportData
-  blob <- new Blob [dataString] { type: "application/json" }
-  url <- URL.createObjectURL blob
-  link <- createElement "a"
-  link.href = url
+  blob <- liftEffect $ new Blob [dataString] { type: "application/json" }
+  url <- liftEffect $ URL.createObjectURL blob
+  link <- liftEffect $ createElement "a"
+  liftEffect $ HTMLElement.setHref url link
 
   -- Get the list name from the listNameElement and append visitor UUID
-  listName <- listNameElement.textContent
+  listName <- liftEffect $ HTMLElement.getTextContent listNameElement
   let fileName = (listName <|> "Current_Count") <> "_" <> visitorId <> ".json"
 
-  link.download = fileName
-  document.body.appendChild link
-  link.click
-  setTimeout 100 do
-    document.body.removeChild link
+  liftEffect $ HTMLElement.setDownload fileName link
+  liftEffect $ HTMLElement.appendChild link document.body
+  liftEffect $ HTMLElement.click link
+  liftEffect $ setTimeout 100 do
+    HTMLElement.removeChild link document.body
     URL.revokeObjectURL url
 
 getVisitorId :: Effect String
-getVisitorId = -- Implement getVisitorId function using localStorage.getItem
+getVisitorId = do
+  storage <- localStorage
+  mVisitorId <- getItem "visitorId" storage
+  case mVisitorId of
+    Just visitorId -> pure visitorId
+    Nothing -> do
+      newVisitorId <- generateUniqueId
+      setItem "visitorId" (show newVisitorId) storage
+      pure $ show newVisitorId
 
-generateUniqueId :: Effect String
-generateUniqueId = -- Implement generateUniqueId function
+generateUniqueId :: Effect UniqueId
+generateUniqueId = do
+  currentTime <- posixTime
+  randomNumber <- random
+  let timeString = show (Milliseconds currentTime)
+      randomString = show (floor (randomNumber * 1000000.0) :: Int)
+  pure $ UniqueId $ timeString <> randomString
 
-visitorId <- getVisitorId
+-- visitorId <- getVisitorId
 
 handleFileInputChange :: Event -> Effect Unit
 handleFileInputChange event = do

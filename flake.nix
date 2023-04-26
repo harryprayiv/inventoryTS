@@ -47,6 +47,7 @@
                   exceptions
                   simple-json
                   web-file
+                  web-storage
                 ];
               # FFI dependencies
               # foreign.Main.node_modules = [];
