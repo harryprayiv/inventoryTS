@@ -4,7 +4,7 @@
     nixpkgs.follows = "purs-nix/nixpkgs";
     utils.url = "github:ursi/flake-utils";
     # optional
-    # ps-tools.follows = "purs-nix/ps-tools";
+    ps-tools.follows = "purs-nix/ps-tools";
   };
 
   outputs = { self, utils, ... }@inputs:
@@ -48,6 +48,8 @@
                   web-dom
                   dom-indexed
                   exceptions
+                  simple-json
+                  web-file
                 ];
               # FFI dependencies
               # foreign.Main.node_modules = [];
@@ -66,9 +68,9 @@
                     ps-command
                     # optional devShell tools
                     # ps-tools.for-0_15.purescript-language-server
-                    # purs-nix.esbuild
-                    # purs-nix.purescript
-                    # nodejs
+                    purs-nix.esbuild
+                    purs-nix.purescript
+                    nodejs
                   ];
               };
         });

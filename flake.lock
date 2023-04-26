@@ -308,6 +308,10 @@
           "purs-nix",
           "nixpkgs"
         ],
+        "ps-tools": [
+          "purs-nix",
+          "ps-tools"
+        ],
         "purs-nix": "purs-nix",
         "utils": "utils_4"
       }
