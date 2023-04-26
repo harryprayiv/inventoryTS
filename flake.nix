@@ -29,21 +29,21 @@
                   prelude
                   console
                   effect
+                  aff
                   arrays
-                  control
                   either
                   foldable-traversable
                   foreign-object
                   integers
+                  argonaut
+                  maybe
                   nullable
-                  transformers
+                  psci-support
+                  refs
+                  strings
+                  tuples
                   web-html
-                  web-html-parser
                   web-dom
-                  web-file
-                  web-events
-                  web-uievents
-                  web-storaget
                 ];
               # FFI dependencies
               # foreign.Main.node_modules = [];
