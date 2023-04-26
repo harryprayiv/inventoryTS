@@ -1,0 +1,22 @@
+{
+  "name": "inventoryts",
+  "version": "1.0.0",
+  "description": "Inventori is a simple web application that allows users to create simple lists of gear, organizing them into main categories, sub-categories, and individual items. Users can increment or decrement the count of items as needed, rename the inventory list, and export the list as a JSON file.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harryprayiv/inventoryTS.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/harryprayiv/inventoryTS/issues"
+  },
+  "homepage": "https://github.com/harryprayiv/inventoryTS#readme"
+}

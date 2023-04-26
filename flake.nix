@@ -8,6 +8,8 @@
   };
 
   outputs = { self, utils, ... }@inputs:
+
+  
     let
       # TODO add missing arm to match standard systems
       #  right now purs-nix is only compatible with x86_64-linux
@@ -56,6 +58,7 @@
             };
           ps-command = ps.command { };
         in
+        rec
         {
           packages.default = ps.output { };
 
