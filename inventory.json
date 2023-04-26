@@ -43,22 +43,20 @@
       "Woodhead (100A)",
       "Bento box (100A)"
     ],
-    "TrueOne": [
-      "10' TrueOne",
-      "15' TrueOne",
-      "25' TrueOne",
-      "50' TrueOne",
-      "100'TrueOne"
+    "TRUE1": [
+      "10' TRUE1",
+      "15' TRUE1",
+      "25' TRUE1",
+      "50' TRUE1",
+      "100'TRUE1"
     ],
     "Bates": [
-      "15'  100A 110V Bates",
-      "25'  100A 110V Bates",
       "50'  100A 110V Bates",
+      "25'  100A 110V Bates",
       "100' 100A 110V Bates",
-      "15'  100A 220V Bates",
-      "25'  100A 220V Bates",
       "100' 100A 220V Bates",
       "50'  100A 220V Bates",
+      "25'  100A 220V Bates",
       "25'  60A 110V Bates",
       "50'  60A 110V Bates",
       "100' 60A 110V Bates",
@@ -66,8 +64,8 @@
       "100-100 Bates Splitter"
     ],
     "Adaptors": [
-      "Female True1 to Male Edison",
-      "Male True1 to Female Edison",
+      "Female TRUE1 to Male Edison",
+      "Male TRUE1 to Female Edison",
       "Female Stage Pin Bates to Male Edison",
       "Male Stage Pin Bates to Female Edison",
       "110V Snakebite (Female Bates)",
@@ -81,8 +79,8 @@
       "25' Soco",
       "Break-Outs (Female Edison)",
       "Break-Ins  (Male Edison)",
-      "Break-Outs (Female True1)",
-      "Break-Ins  (Male True1)",
+      "Break-Outs (Female TRUE1)",
+      "Break-Ins  (Male TRUE1)",
       "Break-Outs (Female Bates)",
       "Break-Ins  (Male Bates)"
     ],
@@ -111,13 +109,16 @@
       "Ethernet to Male DMX Adapter",
       "Ethernet to Female DMX Adapter"
     ],
-    "Electronics": [
-      "RDM Capable Opti-Splitter",
-      "Standard Opti-Splitter",
+    "Wireless": [
+      "100' DMX",
       "Cintenna Receiver",
       "Cintenna Transmitter",
       "Skylink Transmitter",
-      "Skylink Receiver",
+      "Skylink Receiver"
+    ],
+    "Electronics": [
+      "RDM Capable Opti-Splitter",
+      "Standard Opti-Splitter",
       "Node",
       "MA NPU",
       "Portable Board",

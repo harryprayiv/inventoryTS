@@ -13,25 +13,6 @@ type ItemData = {
   addedBy: string;
 };
 
-function clearAllBrowserData() {
-  if (confirm('Are you sure you want to clear all browser data for this page?')) {
-    // List all the keys you want to remove from the local storage
-    const keysToRemove = [
-      'countData',
-      'listName',
-      'sourceHash',
-      'visitorId',
-      'importedFileHashes',
-    ];
-
-    // Remove each key from the local storage
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-
-    // Optionally, reload the page to reflect the changes
-    window.location.reload();
-  }
-}
-
 async function handleInventoryFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
   const file = fileInput.files?.item(0);
@@ -299,6 +280,7 @@ function setCountData(countData: any): void {
 }
 
 const exportListButton = document.getElementById('exportList') as HTMLButtonElement;
+const exportCsvButton = document.getElementById('exportCsv') as HTMLButtonElement;
 
 exportListButton.addEventListener('click', () => {
   exportListAsJSON();
@@ -329,6 +311,48 @@ function exportListAsJSON() {
     URL.revokeObjectURL(url);
   }, 100);
 }
+
+function exportListAsCSV() {
+  const countData = getCountData();
+  const sourceHash = localStorage.getItem('sourceHash') || '';
+
+  // Prepare the CSV headers
+  const headers = ['mainCategory', 'subCategory', 'item', 'count', 'sourceHash'];
+  let csvContent = headers.join(',') + '\n';
+
+  // Iterate through the countData object and create rows for the CSV
+  for (const mainCategory in countData) {
+    for (const subCategory in countData[mainCategory]) {
+      for (const item in countData[mainCategory][subCategory]) {
+        const count = countData[mainCategory][subCategory][item].count;
+        const row = [mainCategory, subCategory, item, count, sourceHash];
+        csvContent += row.join(',') + '\n';
+      }
+    }
+  }
+
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+
+  // Get the list name from the listNameElement and append visitor UUID
+  const listName = listNameElement.textContent || 'Current_Count';
+  const fileName = `${listName}_${visitorId}.csv`;
+
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
+
+// Replace 'exportCsvButton' with 'exportListButton'
+exportCsvButton.addEventListener('click', () => {
+  exportListAsCSV();
+});
 
 function getVisitorId(): string {
   let visitorId = localStorage.getItem('visitorId');
@@ -426,7 +450,6 @@ function updateImportedFileHashes(newHash: string): void {
 const importListButton = document.getElementById('importList') as HTMLInputElement;
 importListButton.addEventListener('change', handleFileInputChange);
 
-
 function mergeCountData(currentData: CountData, importedData: CountData): CountData {
   const result: CountData = JSON.parse(JSON.stringify(currentData));
 
@@ -461,5 +484,24 @@ function clearImportedFileHashes(): void {
     localStorage.setItem('importedFileHashes', JSON.stringify([sourceHash]));
   } else {
     localStorage.removeItem('importedFileHashes');
+  }
+}
+
+function clearAllBrowserData() {
+  if (confirm('Are you sure you want to clear all browser data for this page?')) {
+    // List all the keys you want to remove from the local storage
+    const keysToRemove = [
+      'countData',
+      'listName',
+      'sourceHash',
+      'visitorId',
+      'importedFileHashes',
+    ];
+
+    // Remove each key from the local storage
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // Optionally, reload the page to reflect the changes
+    window.location.reload();
   }
 }
