@@ -2,26 +2,26 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Aff (Aff, later', makeAff)
-import Control.Monad.Eff.Console (log)
+-- import Control.Monad.Aff (Aff, later', makeAff)
+-- import Control.Monad.Eff.Console (log)
 import Control.Monad.Except (throwError)
 import Data.Array (head)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Functor (($>))
 import Data.Int (toNumber)
-import Data.JSON.Decode (decodeJSON)
+-- import Data.JSON.Decode (decodeJSON)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Nullable (toNullable)
-import DOM (DOM)
-import DOM.Event.EventTarget (dispatchEvent)
-import DOM.File.File (file)
-import DOM.File.FileList (item)
-import DOM.File.FileReader (newFileReader, readAsText)
-import DOM.File.Types (File, FileReader)
-import DOM.HTML.Types (ElementType(..), HTMLElement, HTMLSelectElement, HTMLTableElement, HTMLInputElement, HTMLButtonElement, HTMLParagraphElement)
-import DOM.HTML.HTMLElement (innerText)
-import DOM.HTML.HTMLSelectElement as SelectElement
+-- import DOM (DOM)
+-- import DOM.Event.EventTarget (dispatchEvent)
+-- import DOM.File.File (file)
+-- import DOM.File.FileList (item)
+-- import DOM.File.FileReader (newFileReader, readAsText)
+-- import DOM.File.Types (File, FileReader)
+-- import DOM.HTML.Types (ElementType(..), HTMLElement, HTMLSelectElement, HTMLTableElement, HTMLInputElement, HTMLButtonElement, HTMLParagraphElement)
+-- import DOM.HTML.HTMLElement (innerText)
+-- import DOM.HTML.HTMLSelectElement as SelectElement
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (logShow)
@@ -30,6 +30,7 @@ import Effect.Ref (Ref, new, read, write)
 import Foreign.Object as FO
 import Web.Event.Event (Event, EventType(..), event)
 import Web.HTML (window)
+import Web.HTML.HTMLInputElement as HTMLInputElement
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window as Window
 
@@ -103,16 +104,23 @@ addEventListener eventType handler element = do
 
 countData mainCategory subCategory item { count } = count + count
 
-setCountData countData
+-- setCountData countData
 
-Console.log "Updated count:" countData
-displayCountList countData
+changeCount :: Int -> HTMLElement -> HTMLElement -> HTMLElement -> HTMLElement -> HTMLElement -> Event -> Aff Unit
+changeCount count mainCategoryElement subCategoryElement itemElement countInput messageElement event = do
+  let mainCategory = mainCategoryElement.value
+  let subCategory = subCategoryElement.value
+  let item = itemElement.value
+  currentCountData <- liftEffect getCountData
+  let newCountData = countData mainCategory subCategory item currentCountData count
+  liftEffect $ setCountData newCountData
+  Console.log "Updated count:" newCountData
+  displayCountList newCountData
+  liftEffect $ setInputValue countInput "1"
+  liftEffect $ HTMLElement.setTextContent ("Recorded " <> (if count >= 0 then "add" else "subtract") <> " " <> show (abs count) <> " of " <> item <> "!") messageElement
+  setTimeout 3000 $ liftEffect $ \_ -> messageElement.textContent = ""
 
-countInput.value = "1"
-messageElement.textContent = "Recorded " <> (if count >= 0 then "add" else "subtract") <> " " <> show (abs count) <> " of " <> item <> "!"
-setTimeout 3000 do
-  messageElement.textContent = ""
-
+    
 listNameInput <- getElementById "listName" >>= unsafeCoerceElement
 renameListButton <- getElementById "renameList" >>= unsafeCoerceElement
 clearListButton <- getElementById "clearList" >>= unsafeCoerceElement
@@ -133,6 +141,12 @@ clearListButton `onClick` do
     removeItem "countData"
     countListElement.innerHTML = ""
     clearImportedFileHashes
+
+setInputValue :: HTMLElement -> String -> Effect Unit
+setInputValue element value = do
+  input <- HTMLInputElement.fromElement element
+  HTMLInputElement.setValue value input
+
 
 digestMessage :: ArrayBuffer -> Effect String
 digestMessage = -- Implement digestMessage function using crypto.subtle.digest
