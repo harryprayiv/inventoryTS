@@ -36,6 +36,8 @@
                   foreign-object
                   integers
                   argonaut
+                  argonaut-core
+                  argonaut-traversals
                   maybe
                   nullable
                   psci-support
@@ -44,6 +46,8 @@
                   tuples
                   web-html
                   web-dom
+                  dom-indexed
+                  exceptions
                 ];
               # FFI dependencies
               # foreign.Main.node_modules = [];
