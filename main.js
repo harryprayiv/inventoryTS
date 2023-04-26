@@ -616,7 +616,7 @@ function generateQRCode(url) {
     qrcodeElement.innerHTML = ""; // Clear any existing QR code
     new QRCode(qrcodeElement, {
         text: url,
-        width: 60,
-        height: 60, // Set the desired height
+        width: 90,
+        height: 90, // Set the desired height
     });
 }
