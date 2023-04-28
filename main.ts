@@ -243,6 +243,12 @@ function handleRowClick(row, item, mainCategory, subCategory, count) {
     const differenceCell = row.cells[1]; // Assuming the difference cell is at index 1
     differenceCell.textContent = difference.toString();
     differenceCell.style.color = difference < 0 ? 'red' : 'green';
+
+    // Update the count and annotations in local storage
+    const currentData = getCountData();
+    currentData[mainCategory][subCategory][item].count = parseInt(newCount);
+    currentData[mainCategory][subCategory][item].annotations.push(difference.toString()); // Push the difference as a new annotation
+    setCountData(currentData); // Update the local storage with the new data
   }
 }
 
@@ -367,10 +373,27 @@ function setCountData(countData: any): void {
 function exportListAsJSON(): void {
   const countData = getCountData();
   const sourceHash = localStorage.getItem('sourceHash');
-  const exportData = {
-    ...countData,
-    sourceHash: sourceHash || '',
-  };
+
+  // Prepare the export data with annotations
+  const exportData: any = { sourceHash: sourceHash || '' };
+  for (const mainCategory in countData) {
+    if (!exportData[mainCategory]) {
+      exportData[mainCategory] = {};
+    }
+    for (const subCategory in countData[mainCategory]) {
+      if (!exportData[mainCategory][subCategory]) {
+        exportData[mainCategory][subCategory] = {};
+      }
+      for (const item in countData[mainCategory][subCategory]) {
+        exportData[mainCategory][subCategory][item] = {
+          count: countData[mainCategory][subCategory][item].count,
+          addedBy: countData[mainCategory][subCategory][item].addedBy,
+          annotations: countData[mainCategory][subCategory][item].annotations,
+        };
+      }
+    }
+  }
+
   const dataString = JSON.stringify(exportData, null, 2);
   const blob = new Blob([dataString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);

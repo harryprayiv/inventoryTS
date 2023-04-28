@@ -1,4 +1,5 @@
 {
+  "sourceHash": "9d062cabd69042dc6a7c7e1c804361f9fee5d8e8e9544d8d7d9cd1648e5231eb",
   "Rigging": {
     "Camlock": {
       "100' 4/0": {
@@ -265,6 +266,5 @@
         "annotations": []
       }
     }
-  },
-  "sourceHash": "9d062cabd69042dc6a7c7e1c804361f9fee5d8e8e9544d8d7d9cd1648e5231eb"
+  }
 }
