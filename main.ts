@@ -8,10 +8,15 @@ importInventoryButton.addEventListener('change', handleInventoryFileInputChange)
 const clearBrowserDataButton = document.getElementById('clearBrowserDataButton');
 clearBrowserDataButton.addEventListener('click', clearAllBrowserData);
 
-type ItemData = {
+let selectedMainCategory: string | null = null;
+let selectedSubCategory: string | null = null;
+let selectedItem: string | null = null;
+
+interface ItemData {
   count: number;
   addedBy: string;
-};
+  annotations: string[];
+}
 
 async function handleInventoryFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
@@ -39,6 +44,18 @@ async function handleInventoryFileInputChange(event: Event) {
     setTimeout(() => {
       messageElement.textContent = '';
     }, 5500);
+  }
+}
+
+function annotateItem(mainCategory: string, subCategory: string, item: string): void {
+  const currentData = getCountData();
+  const itemData = currentData[mainCategory][subCategory][item];
+
+  // Prompt the user to enter an annotation
+  const annotation = prompt('Enter your annotation for this item:');
+  if (annotation) {
+    itemData.annotations.push(annotation);
+    setCountData(currentData);
   }
 }
 
@@ -100,7 +117,7 @@ fetch('./inventory.json')
     showErrorOverlay();
   });
 
-  function populateMainCategories(menuData: CountData): void {
+function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
   Object.keys(menuData).forEach(key => {
     const optionItem = document.createElement('option');
@@ -114,6 +131,29 @@ fetch('./inventory.json')
   });
 
   populateSubCategories(menuData[mainCategoryElement.value]);
+}
+
+
+async function loadInventory(): Promise<CountData> {
+  const response = await fetch('inventory.json');
+  const jsonData = await response.json();
+  const countData: CountData = {};
+
+  for (const mainCategory in jsonData) {
+    countData[mainCategory] = {};
+    for (const subCategory in jsonData[mainCategory]) {
+      countData[mainCategory][subCategory] = {};
+      if (!countData[mainCategory][subCategory][item]) {
+        countData[mainCategory][subCategory][item] = {
+          count: 0,
+          addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
+          annotations: [], // Add this line
+        };
+      }
+    }
+  }
+
+  return countData;
 }
 
 function populateSubCategories(subCategories: any) {
@@ -132,9 +172,39 @@ function populateSubCategories(subCategories: any) {
   populateItems(subCategories[subCategoryElement.value]);
 }
 
-function populateItems(items: any) {
+function addItem(mainCategory: string, subCategory: string, item: string): void {
+  const currentData = getCountData();
+  if (!currentData[mainCategory]) {
+    currentData[mainCategory] = {};
+  }
+  if (!currentData[mainCategory][subCategory]) {
+    currentData[mainCategory][subCategory] = {};
+  }
+  if (!currentData[mainCategory][subCategory][item]) {
+    currentData[mainCategory][subCategory][item] = {
+      count: 1,
+      addedBy: visitorId,
+      annotations: [] // <-- Initialize the 'annotations' property here
+    };
+  } else {
+    currentData[mainCategory][subCategory][item].count++;
+  }
+  setCountData(currentData);
+}
+
+function handleRowClick(row, item, mainCategory, subCategory, count) {
+  const newCount = prompt(`Enter new count for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
+  if (newCount !== null) {
+    const difference = parseInt(newCount) - count;
+    const differenceCell = row.insertCell(5);
+    differenceCell.textContent = difference.toString();
+    differenceCell.style.color = difference < 0 ? 'red' : 'green';
+  }
+}
+
+function populateItems(items: string[]) {
   itemElement.innerHTML = '';
-  items.forEach((itemName: string) => {
+  items.forEach(itemName => {
     const optionItem = document.createElement('option');
     optionItem.textContent = itemName;
     itemElement.appendChild(optionItem);
@@ -169,7 +239,8 @@ function changeCount(sign: number) {
   if (!countData[mainCategory][subCategory][item]) {
     countData[mainCategory][subCategory][item] = {
       count: 0,
-      addedBy: visitorId
+      addedBy: visitorId,
+      annotations: [], // Add this line
     };
   }
 
@@ -235,7 +306,7 @@ if (savedListName) {
   updateListNameDisplay(savedListName);
 }
 
-function displayCountList(countData: CountData) {
+function displayCountList(data: CountData): void {
   const countListElement = document.getElementById('countList') as HTMLTableElement;
   countListElement.innerHTML = '';
 
@@ -243,21 +314,37 @@ function displayCountList(countData: CountData) {
   const header = countListElement.createTHead();
   const headerRow = header.insertRow(0);
   headerRow.insertCell(0).textContent = 'Count';
-  headerRow.insertCell(1).textContent = 'Item';
-  headerRow.insertCell(2).textContent = 'Type';
-  headerRow.insertCell(3).textContent = 'Category';
+  headerRow.insertCell(1).textContent = 'Difference';
+  headerRow.insertCell(2).textContent = 'Item';
+  headerRow.insertCell(3).textContent = 'Type';
+  headerRow.insertCell(4).textContent = 'Category';
   
   // Insert table data
-  for (const mainCategory in countData) {
-    for (const subCategory in countData[mainCategory]) {
-      for (const item in countData[mainCategory][subCategory]) {
-        const count = countData[mainCategory][subCategory][item].count;
+  for (const mainCategory in data) {
+    for (const subCategory in data[mainCategory]) {
+      for (const item in data[mainCategory][subCategory]) {
+        const count = getCountData()[mainCategory]?.[subCategory]?.[item]?.count || 0;
         const row = countListElement.insertRow(-1);
-  
         row.insertCell(0).textContent = count.toString();
-        row.insertCell(1).textContent = item;
-        row.insertCell(2).textContent = subCategory;
-        row.insertCell(3).textContent = mainCategory;
+        row.insertCell(2).textContent = item;
+        row.insertCell(3).textContent = subCategory;
+        row.insertCell(4).textContent = mainCategory;
+  
+        row.addEventListener('click', () => handleRowClick(row, item, mainCategory, subCategory, count));
+          const newCount = prompt(`Enter new count for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
+          if (newCount !== null) {
+            const difference = parseInt(newCount) - count;
+            const differenceCell = this.insertCell(5);
+            differenceCell.textContent = difference.toString();
+            differenceCell.style.color = difference < 0 ? 'red' : 'green';
+          };
+        const annotateCell = row.insertCell(4);
+        const annotateButton = document.createElement('button');
+        annotateButton.textContent = 'Annotate';
+        annotateButton.addEventListener('click', () => {
+          annotateItem(mainCategory, subCategory, item);
+        });
+        annotateCell.appendChild(annotateButton);
       }
     }
   }
@@ -409,6 +496,15 @@ async function handleFileInputChange(event: Event) {
 
         // Merge the imported data with the current data
         const mergedData = mergeCountData(currentData, importedData);
+        for (const mainCategory in mergedData) {
+          for (const subCategory in mergedData[mainCategory]) {
+            for (const item in mergedData[mainCategory][subCategory]) {
+              if (!mergedData[mainCategory][subCategory][item].annotations) {
+                mergedData[mainCategory][subCategory][item].annotations = [];
+              }
+            }
+          }
+        }
 
         setCountData(mergedData);
         displayCountList(mergedData);
