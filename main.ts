@@ -2,21 +2,81 @@ const mainCategoryElement = document.getElementById('mainCategory') as HTMLSelec
 const subCategoryElement = document.getElementById('subCategory') as HTMLSelectElement;
 const itemElement = document.getElementById('item') as HTMLSelectElement;
 const countListElement = document.getElementById('countList') as HTMLTableElement;
+const countInput = document.getElementById('countInput') as HTMLInputElement;
+const messageElement = document.getElementById('statusMessage') as HTMLParagraphElement;
+const renameListButton = document.getElementById('renameList') as HTMLButtonElement;
+
+
+let selectedMainCategory: string | null = null;
+let selectedSubCategory: string | null = null;
+let selectedItem: string | null = null;
+
+const listNameElement = document.getElementById('listName') as HTMLElement;
+const listNameInput = document.getElementById('listName') as HTMLInputElement;
+
 const importInventoryButton = document.getElementById('importInventory') as HTMLInputElement;
 importInventoryButton.addEventListener('change', handleInventoryFileInputChange);
 
 const clearBrowserDataButton = document.getElementById('clearBrowserDataButton');
 clearBrowserDataButton.addEventListener('click', clearAllBrowserData);
 
-let selectedMainCategory: string | null = null;
-let selectedSubCategory: string | null = null;
-let selectedItem: string | null = null;
+const incrementButton = document.getElementById('increment') as HTMLButtonElement;
+incrementButton.addEventListener('click', () => {
+  changeCount(1);
+});
+const decrementButton = document.getElementById('decrement') as HTMLButtonElement;
+decrementButton.addEventListener('click', () => {
+  changeCount(-1);
+});
+
+const clearListButton = document.getElementById('clearList') as HTMLButtonElement;
+clearListButton.addEventListener('click', () => {
+  if (confirm('Are you sure you want to clear the list?')) {
+    localStorage.removeItem('countData');
+    countListElement.innerHTML = '';
+    clearImportedFileHashes(); // Add this line to clear imported file hashes except the source hash
+  }
+});
+
+const exportCsvButton = document.getElementById('exportCsv') as HTMLButtonElement;
+exportCsvButton.addEventListener('click', () => {
+  exportListAsCSV();
+});
+
+const exportListButton = document.getElementById('exportList') as HTMLButtonElement;
+exportListButton.addEventListener('click', () => {
+  exportListAsJSON();
+});
+
+const importListButton = document.getElementById('importList') as HTMLInputElement;
+importListButton.addEventListener('change', handleFileInputChange);
+
+const savedListName = localStorage.getItem('listName');
+if (savedListName) {
+  listNameInput.value = savedListName;
+  updateListNameDisplay(savedListName);
+}
+
+type SubCategoryData = {
+  [item: string]: ItemData;
+};
+
+type MainCategoryData = {
+  [subCategory: string]: SubCategoryData;
+};
+
+type CountData = {
+  [mainCategory: string]: MainCategoryData;
+};
 
 interface ItemData {
   count: number;
   addedBy: string;
   annotations: string[];
 }
+
+const visitorId = getVisitorId();
+displayCountList(getCountData());
 
 async function handleInventoryFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
@@ -27,8 +87,6 @@ async function handleInventoryFileInputChange(event: Event) {
     reader.onload = async (e) => {
       try {
         const inventoryData = JSON.parse(e.target?.result as string);
-        // Now you have the inventory data, call your existing function
-        // to populate the inventory items using this data
         populateMainCategories(inventoryData);
       } catch (error) {
         showErrorOverlay();
@@ -89,18 +147,6 @@ function showErrorOverlay() {
   }, 2000);
 }
 
-type SubCategoryData = {
-  [item: string]: ItemData;
-};
-
-type MainCategoryData = {
-  [subCategory: string]: SubCategoryData;
-};
-
-type CountData = {
-  [mainCategory: string]: MainCategoryData;
-};
-
 fetch('./inventory.json')
   .then(async response => {
     const buffer = await response.arrayBuffer();
@@ -117,6 +163,27 @@ fetch('./inventory.json')
     showErrorOverlay();
   });
 
+async function loadInventory(): Promise<CountData> {
+  const response = await fetch('inventory.json');
+  const jsonData = await response.json();
+  const countData: CountData = {};
+
+  for (const mainCategory in countData) {
+    for (const subCategory in countData[mainCategory]) {
+      for (const item of Object.keys(countData[mainCategory][subCategory])) {
+        if (!countData[mainCategory][subCategory][item]) {
+          countData[mainCategory][subCategory][item] = {
+          count: 0,
+          addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
+          annotations: [], // Add this line
+          }
+        };
+      }
+    }
+  return countData;
+  }
+}
+
 function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
   Object.keys(menuData).forEach(key => {
@@ -131,29 +198,6 @@ function populateMainCategories(menuData: CountData): void {
   });
 
   populateSubCategories(menuData[mainCategoryElement.value]);
-}
-
-
-async function loadInventory(): Promise<CountData> {
-  const response = await fetch('inventory.json');
-  const jsonData = await response.json();
-  const countData: CountData = {};
-
-  for (const mainCategory in jsonData) {
-    countData[mainCategory] = {};
-    for (const subCategory in jsonData[mainCategory]) {
-      countData[mainCategory][subCategory] = {};
-      if (!countData[mainCategory][subCategory][item]) {
-        countData[mainCategory][subCategory][item] = {
-          count: 0,
-          addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
-          annotations: [], // Add this line
-        };
-      }
-    }
-  }
-
-  return countData;
 }
 
 function populateSubCategories(subCategories: any) {
@@ -196,7 +240,7 @@ function handleRowClick(row, item, mainCategory, subCategory, count) {
   const newCount = prompt(`Enter new count for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
   if (newCount !== null) {
     const difference = parseInt(newCount) - count;
-    const differenceCell = row.insertCell(5);
+    const differenceCell = row.cells[1]; // Assuming the difference cell is at index 1
     differenceCell.textContent = difference.toString();
     differenceCell.style.color = difference < 0 ? 'red' : 'green';
   }
@@ -212,19 +256,6 @@ function populateItems(items: string[]) {
 
   itemElement.style.display = 'inline';
 }
-
-const incrementButton = document.getElementById('increment') as HTMLButtonElement;
-const decrementButton = document.getElementById('decrement') as HTMLButtonElement;
-const countInput = document.getElementById('countInput') as HTMLInputElement;
-const messageElement = document.getElementById('statusMessage') as HTMLParagraphElement;
-
-incrementButton.addEventListener('click', () => {
-  changeCount(1);
-});
-
-decrementButton.addEventListener('click', () => {
-  changeCount(-1);
-});
 
 function changeCount(sign: number) {
   const count = parseInt(countInput.value, 10) * sign;
@@ -267,25 +298,12 @@ function changeCount(sign: number) {
   }, 3000);
 }
 
-const listNameInput = document.getElementById('listName') as HTMLInputElement;
-const renameListButton = document.getElementById('renameList') as HTMLButtonElement;
-const clearListButton = document.getElementById('clearList') as HTMLButtonElement;
-const listNameElement = document.getElementById('listName') as HTMLElement;
-
 renameListButton.addEventListener('click', () => {
   const currentListName = listNameInput.value;
   const newListName = prompt('Enter the new name for the list:', currentListName);
   if (newListName !== null && newListName.trim() !== '') {
     listNameInput.value = newListName.trim();
     updateListNameDisplay(newListName.trim());
-  }
-});
-
-clearListButton.addEventListener('click', () => {
-  if (confirm('Are you sure you want to clear the list?')) {
-    localStorage.removeItem('countData');
-    countListElement.innerHTML = '';
-    clearImportedFileHashes(); // Add this line to clear imported file hashes except the source hash
   }
 });
 
@@ -300,12 +318,6 @@ function updateListNameDisplay(listName: string) {
   document.title = listName;
 }
 
-const savedListName = localStorage.getItem('listName');
-if (savedListName) {
-  listNameInput.value = savedListName;
-  updateListNameDisplay(savedListName);
-}
-
 function displayCountList(data: CountData): void {
   const countListElement = document.getElementById('countList') as HTMLTableElement;
   countListElement.innerHTML = '';
@@ -314,43 +326,29 @@ function displayCountList(data: CountData): void {
   const header = countListElement.createTHead();
   const headerRow = header.insertRow(0);
   headerRow.insertCell(0).textContent = 'Count';
-  headerRow.insertCell(1).textContent = 'Difference';
+  headerRow.insertCell(1).textContent = 'Annotations';
   headerRow.insertCell(2).textContent = 'Item';
   headerRow.insertCell(3).textContent = 'Type';
   headerRow.insertCell(4).textContent = 'Category';
-  
+
   // Insert table data
   for (const mainCategory in data) {
     for (const subCategory in data[mainCategory]) {
       for (const item in data[mainCategory][subCategory]) {
         const count = getCountData()[mainCategory]?.[subCategory]?.[item]?.count || 0;
+        const annotations = getCountData()[mainCategory]?.[subCategory]?.[item]?.annotations || [];
         const row = countListElement.insertRow(-1);
         row.insertCell(0).textContent = count.toString();
+        row.insertCell(1).textContent = JSON.stringify(annotations);
         row.insertCell(2).textContent = item;
         row.insertCell(3).textContent = subCategory;
         row.insertCell(4).textContent = mainCategory;
-  
+
         row.addEventListener('click', () => handleRowClick(row, item, mainCategory, subCategory, count));
-          const newCount = prompt(`Enter new count for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
-          if (newCount !== null) {
-            const difference = parseInt(newCount) - count;
-            const differenceCell = this.insertCell(5);
-            differenceCell.textContent = difference.toString();
-            differenceCell.style.color = difference < 0 ? 'red' : 'green';
-          };
-        const annotateCell = row.insertCell(4);
-        const annotateButton = document.createElement('button');
-        annotateButton.textContent = 'Annotate';
-        annotateButton.addEventListener('click', () => {
-          annotateItem(mainCategory, subCategory, item);
-        });
-        annotateCell.appendChild(annotateButton);
       }
     }
   }
 }
-
-displayCountList(getCountData());
 
 function getCountData(): CountData {
   const countDataString = localStorage.getItem('countData');
@@ -365,13 +363,6 @@ function setCountData(countData: any): void {
   const countDataString = JSON.stringify(countData);
   localStorage.setItem('countData', countDataString);
 }
-
-const exportListButton = document.getElementById('exportList') as HTMLButtonElement;
-const exportCsvButton = document.getElementById('exportCsv') as HTMLButtonElement;
-
-exportListButton.addEventListener('click', () => {
-  exportListAsJSON();
-});
 
 function exportListAsJSON(): void {
   const countData = getCountData();
@@ -436,11 +427,6 @@ function exportListAsCSV() {
   }, 100);
 }
 
-// Replace 'exportCsvButton' with 'exportListButton'
-exportCsvButton.addEventListener('click', () => {
-  exportListAsCSV();
-});
-
 function getVisitorId(): string {
   let visitorId = localStorage.getItem('visitorId');
   if (!visitorId) {
@@ -453,8 +439,6 @@ function getVisitorId(): string {
 function generateUniqueId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
-
-const visitorId = getVisitorId();
 
 async function handleFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
@@ -543,9 +527,6 @@ function updateImportedFileHashes(newHash: string): void {
   localStorage.setItem('importedFileHashes', JSON.stringify(importedFileHashes));
 }
 
-const importListButton = document.getElementById('importList') as HTMLInputElement;
-importListButton.addEventListener('change', handleFileInputChange);
-
 function mergeCountData(currentData: CountData, importedData: CountData): CountData {
   const result: CountData = JSON.parse(JSON.stringify(currentData));
 
@@ -564,6 +545,11 @@ function mergeCountData(currentData: CountData, importedData: CountData): CountD
               const currentCount = result[mainCategory][subCategory][item].count;
               const importedCount = importedData[mainCategory][subCategory][item].count;
               result[mainCategory][subCategory][item].count = currentCount + importedCount;
+
+              // Merge annotations array
+              const currentAnnotations = result[mainCategory][subCategory][item].annotations || [];
+              const importedAnnotations = importedData[mainCategory][subCategory][item].annotations || [];
+              result[mainCategory][subCategory][item].annotations = currentAnnotations.concat(importedAnnotations);
             }
           }
         }
