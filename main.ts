@@ -73,10 +73,56 @@ interface ItemData {
   notes: Array<[string, number]>; // Array of tuples with string and number
 }
 
+renameListButton.addEventListener('click', () => {
+  const currentListName = listNameElement.textContent;
+  const newListName = prompt('Enter the new name for the list:', currentListName);
+  if (newListName !== null && newListName.trim() !== '') {
+    listNameElement.textContent = newListName.trim();
+    localStorage.setItem('listName', newListName.trim());
+  }
+});
+
 const visitorId = getVisitorId();
 generateQRCode(window.location.href);
 displayCountList(getCountData());
 
+fetch('./inventory.json')
+  .then(async response => {
+    const buffer = await response.arrayBuffer();
+    const hash = await digestMessage(buffer);
+    const jsonData = new TextDecoder().decode(buffer);
+    return { menuData: JSON.parse(jsonData), hash };
+  })
+  .then(({ menuData, hash }) => {
+    populateMainCategories(menuData);
+    localStorage.setItem('sourceHash', hash);
+  })
+  .catch(error => {
+    console.error('Error fetching menu data:', error);
+    showErrorOverlay();
+  });
+  async function loadInventory(): Promise<CountData> {
+    const response = await fetch('inventory.json');
+    const jsonData = await response.json();
+    const countData: CountData = {};
+  
+    for (const mainCategory in jsonData) {
+      for (const subCategory in jsonData[mainCategory]) {
+        for (const item of Object.keys(jsonData[mainCategory][subCategory])) {
+          if (!countData[mainCategory]) countData[mainCategory] = {};
+          if (!countData[mainCategory][subCategory]) countData[mainCategory][subCategory] = {};
+          if (!countData[mainCategory][subCategory][item]) {
+            countData[mainCategory][subCategory][item] = {
+              count: 0,
+              addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
+              notes: [],
+            };
+          }
+        }
+      }
+    }
+    return countData;
+  }
 
 async function handleInventoryFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
@@ -105,87 +151,92 @@ async function handleInventoryFileInputChange(event: Event) {
   }
 }
 
-function annotateItem(mainCategory: string, subCategory: string, item: string): void {
-  const currentData = getCountData();
-  const itemData = currentData[mainCategory][subCategory][item];
-
-  // Prompt the user to enter an note
-  const note = prompt('Enter your note for this item:');
-  if (note) {
-    itemData.notes.push([visitorId, parseInt(note)]); // Add the visitorId and the parsed integer note
-    setCountData(currentData);
-  }
+async function digestMessage(buffer: ArrayBuffer): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function handleFileInputChange(event: Event) {
+  const fileInput = event.target as HTMLInputElement;
+  const file = fileInput.files?.item(0);
 
-function showErrorOverlay() {
-  const overlay = document.createElement('div');
-  overlay.id = 'errorOverlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-  overlay.style.display = 'flex';
-  overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
-  overlay.style.zIndex = '9999';
+  if (file && file.type === "application/json") {
+    const buffer = await file.arrayBuffer();
+    const fileHash = await digestMessage(buffer);
+    const importedFileHashes = getImportedFileHashes();
 
-  const gifContainer = document.createElement('div');
-  gifContainer.style.width = '400px';
-  gifContainer.style.height = '400px';
-  gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
-  gifContainer.style.backgroundSize = 'contain';
-  gifContainer.style.backgroundRepeat = 'no-repeat';
-  gifContainer.style.backgroundPosition = 'center center';
+    if (importedFileHashes.includes(fileHash)) {
+      showErrorOverlay();
+      messageElement.textContent = 'This file has already been imported.';
+      setTimeout(() => {
+        messageElement.textContent = '';
+      }, 3000);
+      return;
+    }
 
-  overlay.appendChild(gifContainer);
-  document.body.appendChild(overlay);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
 
-  setTimeout(() => {
-    document.body.removeChild(overlay);
-  }, 2000);
-}
+        if (!validateImportedData(importedData)) {
+          showErrorOverlay();
+          messageElement.textContent = 'Error loading JSON file: Invalid data format.';
+          setTimeout(() => {
+            messageElement.textContent = '';
+          }, 3000);
+          return;
+        }
 
-fetch('./inventory.json')
-  .then(async response => {
-    const buffer = await response.arrayBuffer();
-    const hash = await digestMessage(buffer);
-    const jsonData = new TextDecoder().decode(buffer);
-    return { menuData: JSON.parse(jsonData), hash };
-  })
-  .then(({ menuData, hash }) => {
-    populateMainCategories(menuData);
-    localStorage.setItem('sourceHash', hash);
-  })
-  .catch(error => {
-    console.error('Error fetching menu data:', error);
-    showErrorOverlay();
-  });
+        const storedSourceHash = localStorage.getItem('sourceHash');
+        const importedSourceHash = importedData.sourceHash;
 
-  async function loadInventory(): Promise<CountData> {
-    const response = await fetch('inventory.json');
-    const jsonData = await response.json();
-    const countData: CountData = {};
-  
-    for (const mainCategory in jsonData) {
-      for (const subCategory in jsonData[mainCategory]) {
-        for (const item of Object.keys(jsonData[mainCategory][subCategory])) {
-          if (!countData[mainCategory]) countData[mainCategory] = {};
-          if (!countData[mainCategory][subCategory]) countData[mainCategory][subCategory] = {};
-          if (!countData[mainCategory][subCategory][item]) {
-            countData[mainCategory][subCategory][item] = {
-              count: 0,
-              addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
-              notes: [],
-            };
+        if (storedSourceHash !== importedSourceHash) {
+          showErrorOverlay();
+          messageElement.textContent = 'Warning: The source of the imported file is not identical to the current source file which will cause issues in summing multiple counts.';
+          setTimeout(() => {
+            messageElement.textContent = '';
+          }, 10000);
+        }
+        
+        delete importedData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
+
+        const currentData = getCountData();
+
+        // Merge the imported data with the current data
+        const mergedData = mergeCountData(currentData, importedData);
+        for (const mainCategory in mergedData) {
+          for (const subCategory in mergedData[mainCategory]) {
+            for (const item in mergedData[mainCategory][subCategory]) {
+              if (!mergedData[mainCategory][subCategory][item].notes) {
+                mergedData[mainCategory][subCategory][item].notes = [];
+              }
+            }
           }
         }
+
+        setCountData(mergedData);
+        displayCountList(mergedData);
+
+        // Update the list of imported file hashes
+        updateImportedFileHashes(fileHash);
+      } catch (error) {
+        showErrorOverlay();
+        messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
+        setTimeout(() => {
+          messageElement.textContent = '';
+        }, 3000);
       }
-    }
-    return countData;
+    };
+    reader.readAsText(file);
+  } else {
+    messageElement.textContent = 'Please select a JSON file.';
+    setTimeout(() => {
+      messageElement.textContent = '';
+    }, 5500);
   }
+}
 
 function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
@@ -308,19 +359,16 @@ function changeCount(sign: number) {
   }, 3000);
 }
 
-renameListButton.addEventListener('click', () => {
-  const currentListName = listNameElement.textContent;
-  const newListName = prompt('Enter the new name for the list:', currentListName);
-  if (newListName !== null && newListName.trim() !== '') {
-    listNameElement.textContent = newListName.trim();
-    localStorage.setItem('listName', newListName.trim());
-  }
-});
+function annotateItem(mainCategory: string, subCategory: string, item: string): void {
+  const currentData = getCountData();
+  const itemData = currentData[mainCategory][subCategory][item];
 
-async function digestMessage(buffer: ArrayBuffer): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  // Prompt the user to enter an note
+  const note = prompt('Enter your note for this item:');
+  if (note) {
+    itemData.notes.push([visitorId, parseInt(note)]); // Add the visitorId and the parsed integer note
+    setCountData(currentData);
+  }
 }
 
 function updateListNameDisplay(listName: string) {
@@ -405,7 +453,6 @@ function displayCountList(data: CountData): void {
   }
 }
 
-
 function getCountData(): CountData {
   const countDataString = localStorage.getItem('countData');
   if (countDataString) {
@@ -418,6 +465,39 @@ function getCountData(): CountData {
 function setCountData(countData: any): void {
   const countDataString = JSON.stringify(countData);
   localStorage.setItem('countData', countDataString);
+}
+
+function mergeCountData(currentData: CountData, importedData: CountData): CountData {
+  const result: CountData = JSON.parse(JSON.stringify(currentData));
+
+  for (const mainCategory in importedData) {
+    if (!result[mainCategory]) {
+      result[mainCategory] = importedData[mainCategory];
+    } else {
+      for (const subCategory in importedData[mainCategory]) {
+        if (!result[mainCategory][subCategory]) {
+          result[mainCategory][subCategory] = importedData[mainCategory][subCategory];
+        } else {
+          for (const item in importedData[mainCategory][subCategory]) {
+            if (!result[mainCategory][subCategory][item]) {
+              result[mainCategory][subCategory][item] = importedData[mainCategory][subCategory][item];
+            } else {
+              const currentCount = result[mainCategory][subCategory][item].count;
+              const importedCount = importedData[mainCategory][subCategory][item].count;
+              result[mainCategory][subCategory][item].count = currentCount + importedCount;
+
+              // Merge notes array
+              const currentNotes = result[mainCategory][subCategory][item].notes || [];
+              const importedNotes = importedData[mainCategory][subCategory][item].notes || [];
+              result[mainCategory][subCategory][item].notes = currentNotes.concat(importedNotes);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 function exportListAsJSON(): void {
@@ -515,87 +595,6 @@ function generateUniqueId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-async function handleFileInputChange(event: Event) {
-  const fileInput = event.target as HTMLInputElement;
-  const file = fileInput.files?.item(0);
-
-  if (file && file.type === "application/json") {
-    const buffer = await file.arrayBuffer();
-    const fileHash = await digestMessage(buffer);
-    const importedFileHashes = getImportedFileHashes();
-
-    if (importedFileHashes.includes(fileHash)) {
-      showErrorOverlay();
-      messageElement.textContent = 'This file has already been imported.';
-      setTimeout(() => {
-        messageElement.textContent = '';
-      }, 3000);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
-
-        if (!validateImportedData(importedData)) {
-          showErrorOverlay();
-          messageElement.textContent = 'Error loading JSON file: Invalid data format.';
-          setTimeout(() => {
-            messageElement.textContent = '';
-          }, 3000);
-          return;
-        }
-
-        const storedSourceHash = localStorage.getItem('sourceHash');
-        const importedSourceHash = importedData.sourceHash;
-
-        if (storedSourceHash !== importedSourceHash) {
-          showErrorOverlay();
-          messageElement.textContent = 'Warning: The source of the imported file is not identical to the current source file which will cause issues in summing multiple counts.';
-          setTimeout(() => {
-            messageElement.textContent = '';
-          }, 10000);
-        }
-        
-        delete importedData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
-
-        const currentData = getCountData();
-
-        // Merge the imported data with the current data
-        const mergedData = mergeCountData(currentData, importedData);
-        for (const mainCategory in mergedData) {
-          for (const subCategory in mergedData[mainCategory]) {
-            for (const item in mergedData[mainCategory][subCategory]) {
-              if (!mergedData[mainCategory][subCategory][item].notes) {
-                mergedData[mainCategory][subCategory][item].notes = [];
-              }
-            }
-          }
-        }
-
-        setCountData(mergedData);
-        displayCountList(mergedData);
-
-        // Update the list of imported file hashes
-        updateImportedFileHashes(fileHash);
-      } catch (error) {
-        showErrorOverlay();
-        messageElement.textContent = 'Error loading JSON file: Invalid JSON format.';
-        setTimeout(() => {
-          messageElement.textContent = '';
-        }, 3000);
-      }
-    };
-    reader.readAsText(file);
-  } else {
-    messageElement.textContent = 'Please select a JSON file.';
-    setTimeout(() => {
-      messageElement.textContent = '';
-    }, 5500);
-  }
-}
-
 function getImportedFileHashes(): string[] {
   const importedFileHashesString = localStorage.getItem('importedFileHashes');
   if (importedFileHashesString) {
@@ -609,39 +608,6 @@ function updateImportedFileHashes(newHash: string): void {
   const importedFileHashes = getImportedFileHashes();
   importedFileHashes.push(newHash);
   localStorage.setItem('importedFileHashes', JSON.stringify(importedFileHashes));
-}
-
-function mergeCountData(currentData: CountData, importedData: CountData): CountData {
-  const result: CountData = JSON.parse(JSON.stringify(currentData));
-
-  for (const mainCategory in importedData) {
-    if (!result[mainCategory]) {
-      result[mainCategory] = importedData[mainCategory];
-    } else {
-      for (const subCategory in importedData[mainCategory]) {
-        if (!result[mainCategory][subCategory]) {
-          result[mainCategory][subCategory] = importedData[mainCategory][subCategory];
-        } else {
-          for (const item in importedData[mainCategory][subCategory]) {
-            if (!result[mainCategory][subCategory][item]) {
-              result[mainCategory][subCategory][item] = importedData[mainCategory][subCategory][item];
-            } else {
-              const currentCount = result[mainCategory][subCategory][item].count;
-              const importedCount = importedData[mainCategory][subCategory][item].count;
-              result[mainCategory][subCategory][item].count = currentCount + importedCount;
-
-              // Merge notes array
-              const currentNotes = result[mainCategory][subCategory][item].notes || [];
-              const importedNotes = importedData[mainCategory][subCategory][item].notes || [];
-              result[mainCategory][subCategory][item].notes = currentNotes.concat(importedNotes);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return result;
 }
 
 function clearImportedFileHashes(): void {
@@ -670,6 +636,36 @@ function clearAllBrowserData() {
     // Optionally, reload the page to reflect the changes
     window.location.reload();
   }
+}
+
+function showErrorOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'errorOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.zIndex = '9999';
+
+  const gifContainer = document.createElement('div');
+  gifContainer.style.width = '400px';
+  gifContainer.style.height = '400px';
+  gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
+  gifContainer.style.backgroundSize = 'contain';
+  gifContainer.style.backgroundRepeat = 'no-repeat';
+  gifContainer.style.backgroundPosition = 'center center';
+
+  overlay.appendChild(gifContainer);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    document.body.removeChild(overlay);
+  }, 2000);
 }
 
 function validateImportedData(importedData: any): boolean {

@@ -48,9 +48,10 @@
                   simple-json
                   web-file
                   web-storage
+                  # qr-code
                 ];
               # FFI dependencies
-              # foreign.Main.node_modules = [];
+              # foreign.Main.node_modules = [ qrcode ];
             };
           ps-tools = inputs.ps-tools.legacyPackages.${system};
           ps-command = ps.command { };
