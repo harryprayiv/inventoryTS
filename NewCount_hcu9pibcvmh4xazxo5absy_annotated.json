@@ -3,215 +3,298 @@
   "Rigging": {
     "Camlock": {
       "100' 4/0": {
-        "count": 100,
+        "count": 98,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "-2"
+        ]
       },
       "50' 4/0": {
         "count": 50,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "25' 4/0": {
         "count": 10,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "4/0 Jumper": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "110V Snakebite (Female Bates)": {
         "count": 5,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "220V Snakebite (Female Bates)": {
         "count": 5,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "110V Backbite (Male Bates)": {
         "count": 5,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "220V Backbite (Male Bates)": {
         "count": 10,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "100' 2/0": {
         "count": 40,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "50' 2/0": {
-        "count": 20,
+        "count": 18,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "-2"
+        ]
       },
       "50' Banded": {
-        "count": 28,
+        "count": 29,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "1"
+        ]
       }
     },
     "Distro": {
       "1200A Distro Box": {
         "count": 10,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "900A Distro Box": {
         "count": 6,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "600A Distro Box": {
         "count": 8,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "300A Distro Box": {
         "count": 2,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Disconnect": {
         "count": 2,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Soft 3fers (MFFF)": {
         "count": 60,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Hard 3fers (MFFF)": {
         "count": 25,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "MFF": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "FFM": {
         "count": 10,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "MM": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "FF": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Ground Squid": {
         "count": 5,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Soft Reverse 3fers (FMMM)": {
         "count": 1,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       }
     },
     "Small Distro": {
       "25' 12/3": {
         "count": 100,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "50' 12/3": {
         "count": 100,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "25' 100A 110V Bates": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "50' 100A 110V Bates": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "100-60 Splitter": {
         "count": 25,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "100-100 Splitter": {
         "count": 25,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Lunchbox (100A)": {
         "count": 25,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Woodhead (100A)": {
         "count": 25,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "Bento box (100A)": {
         "count": 5,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "100' 100A 110V Bates": {
         "count": 11,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0",
+          "0"
+        ]
       },
       "100' 100A 220V Bates": {
         "count": 6,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "25' 60A 110V Bates": {
         "count": 20,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "50' 60A 110V Bates": {
         "count": 10,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "10' 12/3": {
         "count": 100,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "15' 12/3": {
         "count": 100,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       }
     },
     "Dimming": {
       "100' Soco": {
         "count": 15,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "50' Soco": {
         "count": 40,
         "addedBy": "dw7mols8fzommhkrrj1ip",
-        "annotations": []
+        "annotations": [
+          "0"
+        ]
       },
       "12x1.2 Soco Rat Pac": {
         "count": 10,

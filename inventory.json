@@ -28,6 +28,7 @@
       "700A Distro Box",
       "600A Distro Box",
       "300A Distro Box",
+      "200 Amp Soco Pagoda Style", 
       "2-6 Spider Box",
       "2-3 Spider Box",
       "Disconnect", 
@@ -44,11 +45,11 @@
       "Bento box (100A)"
     ],
     "TRUE1": [
-      "10' TRUE1",
-      "15' TRUE1",
       "25' TRUE1",
       "50' TRUE1",
-      "100'TRUE1"
+      "100'TRUE1",
+      "10' TRUE1",
+      "15' TRUE1"
     ],
     "Bates": [
       "50'  100A 110V Bates",
