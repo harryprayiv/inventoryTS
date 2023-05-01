@@ -4,11 +4,17 @@
     nixpkgs.follows = "purs-nix/nixpkgs";
     utils.url = "github:ursi/flake-utils";
     ps-tools.follows = "purs-nix/ps-tools";
+    # npmlock2nix = { 
+    #   flake = false;
+    #   url = "github:nix-community/npmlock2nix";
+    # };
   };
 
-  outputs = { self, utils, ... }@inputs:
+  outputs = { self, utils, nixpkgs, ... }@inputs:
     let
       systems = [ "x86_64-linux" "x86_64-darwin" ];
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      # npmlock2nix = (import inputs.npmlock2nix { inherit pkgs; }).v1;
     in
     utils.apply-systems
       { inherit inputs systems; }
@@ -33,6 +39,7 @@
                   foreign-object
                   integers
                   argonaut
+                  argonaut-aeson-generic
                   argonaut-core
                   argonaut-traversals
                   maybe
@@ -48,6 +55,7 @@
                   simple-json
                   web-file
                   web-storage
+                  # storable
                   # qr-code
                 ];
               # FFI dependencies
@@ -57,7 +65,13 @@
           ps-command = ps.command { };
         in
         {
-          packages.default = ps.output { };
+          # packages.default = ps.output { };
+          packages =
+             with ps;
+             { default = app { name = "inventori"; };
+               bundle = bundle {};
+               output = output {};
+             };
 
           devShells.default =
             pkgs.mkShell

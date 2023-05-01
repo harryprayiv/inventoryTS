@@ -3,16 +3,20 @@ module Main where
 import Prelude
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Web.HTML (window)
+import Web.HTML.Window (document)
+import Web.HTML.HTMLDocument as HTMLDocument
+import Web.HTML.HTMLElement (HTMLElement)
+import Web.HTML.HTMLButtonElement (HTMLButtonElement, toHTMLButtonElement)
+import Web.HTML.HTMLInputElement (HTMLInputElement, toHTMLInputElement)
+import Web.HTML.HTMLParagraphElement (HTMLParagraphElement, toHTMLParagraphElement)
+import Web.HTML.HTMLSelectElement (HTMLSelectElement, toHTMLSelectElement)
+import Web.HTML.HTMLTableElement (HTMLTableElement, toHTMLTableElement)
 import Web.DOM (document)
 import Web.DOM.Document (getElementById)
 import Web.DOM.Element (fromElement)
-import Web.DOM.HTML.ButtonElement as HTMLButtonElement
-import Web.DOM.HTML.HTMLElement as HTMLElement
-import Web.DOM.HTML.InputElement as HTMLInputElement
-import Web.DOM.HTML.ParagraphElement as HTMLParagraphElement
-import Web.DOM.HTML.SelectElement as HTMLSelectElement
-import Web.DOM.HTML.TableElement as HTMLTableElement
 import Web.Event.EventTarget (addEventListener)
+import Web.Storage.LocalStorage (getItem, setItem, removeItem)
 import Data.Maybe (Maybe(..))
 
 type ItemData = { count :: Int, addedBy :: String, notes :: Array (Tuple String Int) }
@@ -25,6 +29,12 @@ type CountData = StrMap MainCategoryData
 
 visitorId :: String
 visitorId = getVisitorId
+
+getButtonById :: String -> Effect (Maybe HTMLButtonElement)
+getButtonById id = do
+  doc <- window >>= document
+  element <- HTMLDocument.getElementById id doc
+  pure $ toHTMLButtonElement =<< element
 
 populateMainCategories :: CountData -> Effect Unit
 populateMainCategories menuData = do
@@ -155,7 +165,7 @@ updateListNameDisplay listName = do
   document # setTitle listName
 
 displayCountList :: CountData -> Effect Unit
-displayCountList data = do
+displayCountList countData = do
   countListElement <- getElementById "countList" >>= unsafeCoerce
   countListElement # setInnerHTML ""
 
@@ -173,12 +183,12 @@ displayCountList data = do
   forWithIndex_ ["Count", "Diff", "Item", "Type", "Category"] \i text -> do
     headerRow # insertCell i # setInnerText text
 
-  -- Insert table data
-  for_ (M.keys data) \mainCategory -> do
-    for_ (M.keys (M.lookup mainCategory data)) \subCategory -> do
-      for_ (M.keys (M.lookup subCategory (M.lookup mainCategory data))) \item -> do
-        let count = M.lookup mainCategory data >>= M.lookup subCategory >>= M.lookup item >>= (_.count) <|> Just 0
-            notes = M.lookup mainCategory data >>= M.lookup subCategory >>= M.lookup item >>= (_.notes) <|> Just []
+  -- Insert table 
+  for_ (M.keys ) \mainCategory -> do
+    for_ (M.keys (M.lookup mainCategory )) \subCategory -> do
+      for_ (M.keys (M.lookup subCategory (M.lookup mainCategory ))) \item -> do
+        let count = M.lookup mainCategory  >>= M.lookup subCategory >>= M.lookup item >>= (_.count) <|> Just 0
+            notes = M.lookup mainCategory  >>= M.lookup subCategory >>= M.lookup item >>= (_.notes) <|> Just []
         row <- countListElement # insertRow (-1)
 
         row # insertCell 0 # setInnerText (fromMaybe "0" (count <#> show))
