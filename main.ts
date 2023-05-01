@@ -700,7 +700,7 @@ function generateQRCode(url: string): void {
   qrcodeElement.innerHTML = ""; // Clear any existing QR code
   new QRCode(qrcodeElement, {
     text: url,
-    width: 80, // Set the desired width
-    height: 80, // Set the desired height
+    width: 90, // Set the desired width
+    height: 90, // Set the desired height
   });
 }
