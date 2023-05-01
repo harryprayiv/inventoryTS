@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="styles.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
   @media (max-width: 767px) {
   .header {
@@ -28,7 +29,14 @@
   .header {
     display: flex;
     justify-content: space-between;
+    align-items: stretch; /* changed from 'center' to 'stretch' */
+    padding: 16px;
+  }
+  .title-and-qr {
+    display: flex;
     align-items: center;
+    gap: 16px;
+    flex-grow: 1; /* added this property */
   }
   .rename-clear {
     display: flex;
@@ -38,9 +46,34 @@
   .hidden {
     display: none;
   }
+  .current-session {
+    color: green;
+  }
+  .current-session td:nth-child(2) {
+    color: green;
+  }
+  .column-1 {
+    width: 15%;
+  }
+  .column-2 {
+    width: 15%;
+  }
+  .column-3 {
+    width: 70%;
+  }
+  .imported-session td:nth-child(2) {
+    color: blue;
+  }
+  h1 {
+    width: 100%; /* added this property */
+  }
+  .imported-session {
+    color: blue;
+  }
   table {
     border-collapse: collapse;
     width: 90%;
+    table-layout: fixed;
   }
   th, td {
     padding: 8px;
@@ -106,8 +139,11 @@
 <body>
   <!-- Wrap the <h1> and import/export functionality in a <header> element -->
     <header class="header">
-      <h1><span id="listName">NewCount</span>
+      <div class="title-and-qr">
+        <div id="qrcode"></div>
+        <span id="listName">NewCount</span>
       </h1>
+      </div>
       <!-- Wrap the import/export buttons in a <div> with the class "import-export" -->
       <div class="import-export">
         <button id="renameList">Rename</button>

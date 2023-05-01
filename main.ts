@@ -6,18 +6,17 @@ const countInput = document.getElementById('countInput') as HTMLInputElement;
 const messageElement = document.getElementById('statusMessage') as HTMLParagraphElement;
 const renameListButton = document.getElementById('renameList') as HTMLButtonElement;
 
-
 let selectedMainCategory: string | null = null;
 let selectedSubCategory: string | null = null;
 let selectedItem: string | null = null;
 
 const listNameElement = document.getElementById('listName') as HTMLElement;
-const listNameInput = document.getElementById('listName') as HTMLInputElement;
+const listNameInput = document.getElementById('listNameInput') as HTMLInputElement; // Changed the ID
 
 const importInventoryButton = document.getElementById('importInventory') as HTMLInputElement;
 importInventoryButton.addEventListener('change', handleInventoryFileInputChange);
 
-const clearBrowserDataButton = document.getElementById('clearBrowserDataButton');
+const clearBrowserDataButton = document.getElementById('clearBrowserDataButton') as HTMLButtonElement; // Added type
 clearBrowserDataButton.addEventListener('click', clearAllBrowserData);
 
 const incrementButton = document.getElementById('increment') as HTMLButtonElement;
@@ -53,8 +52,7 @@ importListButton.addEventListener('change', handleFileInputChange);
 
 const savedListName = localStorage.getItem('listName');
 if (savedListName) {
-  listNameInput.value = savedListName;
-  updateListNameDisplay(savedListName);
+  listNameElement.textContent = savedListName;
 }
 
 type SubCategoryData = {
@@ -72,11 +70,13 @@ type CountData = {
 interface ItemData {
   count: number;
   addedBy: string;
-  annotations: string[];
+  notes: Array<[string, number]>; // Array of tuples with string and number
 }
 
 const visitorId = getVisitorId();
+generateQRCode(window.location.href);
 displayCountList(getCountData());
+
 
 async function handleInventoryFileInputChange(event: Event) {
   const fileInput = event.target as HTMLInputElement;
@@ -109,13 +109,14 @@ function annotateItem(mainCategory: string, subCategory: string, item: string): 
   const currentData = getCountData();
   const itemData = currentData[mainCategory][subCategory][item];
 
-  // Prompt the user to enter an annotation
-  const annotation = prompt('Enter your annotation for this item:');
-  if (annotation) {
-    itemData.annotations.push(annotation);
+  // Prompt the user to enter an note
+  const note = prompt('Enter your note for this item:');
+  if (note) {
+    itemData.notes.push([visitorId, parseInt(note)]); // Add the visitorId and the parsed integer note
     setCountData(currentData);
   }
 }
+
 
 function showErrorOverlay() {
   const overlay = document.createElement('div');
@@ -163,26 +164,28 @@ fetch('./inventory.json')
     showErrorOverlay();
   });
 
-async function loadInventory(): Promise<CountData> {
-  const response = await fetch('inventory.json');
-  const jsonData = await response.json();
-  const countData: CountData = {};
-
-  for (const mainCategory in countData) {
-    for (const subCategory in countData[mainCategory]) {
-      for (const item of Object.keys(countData[mainCategory][subCategory])) {
-        if (!countData[mainCategory][subCategory][item]) {
-          countData[mainCategory][subCategory][item] = {
-          count: 0,
-          addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
-          annotations: [], // Add this line
+  async function loadInventory(): Promise<CountData> {
+    const response = await fetch('inventory.json');
+    const jsonData = await response.json();
+    const countData: CountData = {};
+  
+    for (const mainCategory in jsonData) {
+      for (const subCategory in jsonData[mainCategory]) {
+        for (const item of Object.keys(jsonData[mainCategory][subCategory])) {
+          if (!countData[mainCategory]) countData[mainCategory] = {};
+          if (!countData[mainCategory][subCategory]) countData[mainCategory][subCategory] = {};
+          if (!countData[mainCategory][subCategory][item]) {
+            countData[mainCategory][subCategory][item] = {
+              count: 0,
+              addedBy: visitorId, // <-- Make sure visitorId is defined somewhere in your code
+              notes: [],
+            };
           }
-        };
+        }
       }
     }
-  return countData;
+    return countData;
   }
-}
 
 function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
@@ -228,26 +231,27 @@ function addItem(mainCategory: string, subCategory: string, item: string): void 
     currentData[mainCategory][subCategory][item] = {
       count: 1,
       addedBy: visitorId,
-      annotations: [] // <-- Initialize the 'annotations' property here
+      notes: [[visitorId, 1]] // <-- Initialize the 'notes' property here with visitorId
     };
   } else {
     currentData[mainCategory][subCategory][item].count++;
+    currentData[mainCategory][subCategory][item].notes.push([visitorId, 1]); // <-- Add 1 as a new note with visitorId
   }
   setCountData(currentData);
 }
 
 function handleRowClick(row, item, mainCategory, subCategory, count) {
-  const newCount = prompt(`Enter new count for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
+  const newCount = prompt(`Enter new note for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
   if (newCount !== null) {
     const difference = parseInt(newCount) - count;
     const differenceCell = row.cells[1]; // Assuming the difference cell is at index 1
     differenceCell.textContent = difference.toString();
     differenceCell.style.color = difference < 0 ? 'red' : 'green';
 
-    // Update the count and annotations in local storage
+    // Update the count and notes in local storage
     const currentData = getCountData();
     currentData[mainCategory][subCategory][item].count = parseInt(newCount);
-    currentData[mainCategory][subCategory][item].annotations.push(difference.toString()); // Push the difference as a new annotation
+    currentData[mainCategory][subCategory][item].notes.push([visitorId, difference]); // Push the difference as a new note with visitorId
     setCountData(currentData); // Update the local storage with the new data
   }
 }
@@ -277,7 +281,7 @@ function changeCount(sign: number) {
     countData[mainCategory][subCategory][item] = {
       count: 0,
       addedBy: visitorId,
-      annotations: [], // Add this line
+      notes: [], // Add this line
     };
   }
 
@@ -305,11 +309,11 @@ function changeCount(sign: number) {
 }
 
 renameListButton.addEventListener('click', () => {
-  const currentListName = listNameInput.value;
+  const currentListName = listNameElement.textContent;
   const newListName = prompt('Enter the new name for the list:', currentListName);
   if (newListName !== null && newListName.trim() !== '') {
-    listNameInput.value = newListName.trim();
-    updateListNameDisplay(newListName.trim());
+    listNameElement.textContent = newListName.trim();
+    localStorage.setItem('listName', newListName.trim());
   }
 });
 
@@ -328,11 +332,35 @@ function displayCountList(data: CountData): void {
   const countListElement = document.getElementById('countList') as HTMLTableElement;
   countListElement.innerHTML = '';
 
+  // Create colgroup with column widths
+  const colgroup = document.createElement('colgroup');
+  const col1 = document.createElement('col');
+  col1.style.width = '10%';
+  colgroup.appendChild(col1);
+
+  const col2 = document.createElement('col');
+  col2.style.width = '20%';
+  colgroup.appendChild(col2);
+
+  const col3 = document.createElement('col');
+  col3.style.width = '35%';
+  colgroup.appendChild(col3);
+
+  const col4 = document.createElement('col');
+  col4.style.width = '20%';
+  colgroup.appendChild(col4);
+
+  const col5 = document.createElement('col');
+  col5.style.width = '15%';
+  colgroup.appendChild(col5);
+
+  countListElement.appendChild(colgroup);
+
   // Create table headers
   const header = countListElement.createTHead();
   const headerRow = header.insertRow(0);
   headerRow.insertCell(0).textContent = 'Count';
-  headerRow.insertCell(1).textContent = 'Annotations';
+  headerRow.insertCell(1).textContent = 'Diff';
   headerRow.insertCell(2).textContent = 'Item';
   headerRow.insertCell(3).textContent = 'Type';
   headerRow.insertCell(4).textContent = 'Category';
@@ -342,10 +370,31 @@ function displayCountList(data: CountData): void {
     for (const subCategory in data[mainCategory]) {
       for (const item in data[mainCategory][subCategory]) {
         const count = getCountData()[mainCategory]?.[subCategory]?.[item]?.count || 0;
-        const annotations = getCountData()[mainCategory]?.[subCategory]?.[item]?.annotations || [];
+        const notes = getCountData()[mainCategory]?.[subCategory]?.[item]?.notes || [];
         const row = countListElement.insertRow(-1);
+
         row.insertCell(0).textContent = count.toString();
-        row.insertCell(1).textContent = JSON.stringify(annotations);
+
+        // Display the last note (ignoring visitorId)
+        if (notes.length > 0) {
+          const lastAnnotation = notes[notes.length - 1][1];
+          const noteCell = row.insertCell(1);
+          noteCell.textContent = lastAnnotation.toString();
+
+          // Add a CSS class based on visitorId
+          const lastAnnotationVisitorId = notes[notes.length - 1][0];
+          if (lastAnnotationVisitorId === visitorId) {
+            noteCell.classList.add('current-session');
+          } else {
+            noteCell.classList.add('imported-session');
+          }
+
+          // Set the color based on the value of the last note
+          noteCell.style.color = lastAnnotation < 0 ? 'red' : 'green';
+        } else {
+          row.insertCell(1).textContent = '';
+        }
+
         row.insertCell(2).textContent = item;
         row.insertCell(3).textContent = subCategory;
         row.insertCell(4).textContent = mainCategory;
@@ -355,6 +404,7 @@ function displayCountList(data: CountData): void {
     }
   }
 }
+
 
 function getCountData(): CountData {
   const countDataString = localStorage.getItem('countData');
@@ -374,7 +424,7 @@ function exportListAsJSON(): void {
   const countData = getCountData();
   const sourceHash = localStorage.getItem('sourceHash');
 
-  // Prepare the export data with annotations
+  // Prepare the export data with notes
   const exportData: any = { sourceHash: sourceHash || '' };
   for (const mainCategory in countData) {
     if (!exportData[mainCategory]) {
@@ -388,7 +438,7 @@ function exportListAsJSON(): void {
         exportData[mainCategory][subCategory][item] = {
           count: countData[mainCategory][subCategory][item].count,
           addedBy: countData[mainCategory][subCategory][item].addedBy,
-          annotations: countData[mainCategory][subCategory][item].annotations,
+          notes: countData[mainCategory][subCategory][item].notes,
         };
       }
     }
@@ -418,7 +468,7 @@ function exportListAsCSV() {
   const sourceHash = localStorage.getItem('sourceHash') || '';
 
   // Prepare the CSV headers
-  const headers = ['mainCategory', 'subCategory', 'item', 'count', 'sourceHash'];
+  const headers = ['Count', 'Diff', 'Item', 'Type', 'Category'];
   let csvContent = headers.join(',') + '\n';
 
   // Iterate through the countData object and create rows for the CSV
@@ -426,7 +476,9 @@ function exportListAsCSV() {
     for (const subCategory in countData[mainCategory]) {
       for (const item in countData[mainCategory][subCategory]) {
         const count = countData[mainCategory][subCategory][item].count;
-        const row = [mainCategory, subCategory, item, count, sourceHash];
+        const notes = countData[mainCategory][subCategory][item].notes;
+        const diff = notes.length > 0 ? notes[0][1] : '';
+        const row = [count, diff, item, subCategory, mainCategory];
         csvContent += row.join(',') + '\n';
       }
     }
@@ -486,17 +538,26 @@ async function handleFileInputChange(event: Event) {
       try {
         const importedData = JSON.parse(e.target?.result as string);
 
+        if (!validateImportedData(importedData)) {
+          showErrorOverlay();
+          messageElement.textContent = 'Error loading JSON file: Invalid data format.';
+          setTimeout(() => {
+            messageElement.textContent = '';
+          }, 3000);
+          return;
+        }
+
         const storedSourceHash = localStorage.getItem('sourceHash');
         const importedSourceHash = importedData.sourceHash;
 
         if (storedSourceHash !== importedSourceHash) {
           showErrorOverlay();
-          messageElement.textContent = 'Warning: The source of the imported file is not identical to the current source file.';
+          messageElement.textContent = 'Warning: The source of the imported file is not identical to the current source file which will cause issues in summing multiple counts.';
           setTimeout(() => {
             messageElement.textContent = '';
-          }, 5000);
+          }, 10000);
         }
-
+        
         delete importedData.sourceHash; // Remove sourceHash from jsonData before merging with the current count
 
         const currentData = getCountData();
@@ -506,8 +567,8 @@ async function handleFileInputChange(event: Event) {
         for (const mainCategory in mergedData) {
           for (const subCategory in mergedData[mainCategory]) {
             for (const item in mergedData[mainCategory][subCategory]) {
-              if (!mergedData[mainCategory][subCategory][item].annotations) {
-                mergedData[mainCategory][subCategory][item].annotations = [];
+              if (!mergedData[mainCategory][subCategory][item].notes) {
+                mergedData[mainCategory][subCategory][item].notes = [];
               }
             }
           }
@@ -569,10 +630,10 @@ function mergeCountData(currentData: CountData, importedData: CountData): CountD
               const importedCount = importedData[mainCategory][subCategory][item].count;
               result[mainCategory][subCategory][item].count = currentCount + importedCount;
 
-              // Merge annotations array
-              const currentAnnotations = result[mainCategory][subCategory][item].annotations || [];
-              const importedAnnotations = importedData[mainCategory][subCategory][item].annotations || [];
-              result[mainCategory][subCategory][item].annotations = currentAnnotations.concat(importedAnnotations);
+              // Merge notes array
+              const currentNotes = result[mainCategory][subCategory][item].notes || [];
+              const importedNotes = importedData[mainCategory][subCategory][item].notes || [];
+              result[mainCategory][subCategory][item].notes = currentNotes.concat(importedNotes);
             }
           }
         }
@@ -609,4 +670,37 @@ function clearAllBrowserData() {
     // Optionally, reload the page to reflect the changes
     window.location.reload();
   }
+}
+
+function validateImportedData(importedData: any): boolean {
+  if (!importedData) {
+    return false;
+  }
+
+  if (!importedData.hasOwnProperty('sourceHash') || typeof importedData.sourceHash !== 'string') {
+    return false;
+  }
+
+  for (const mainCategory in importedData) {
+    if (mainCategory === 'sourceHash') {
+      continue; // Ignore the sourceHash property
+    }
+    if (typeof mainCategory !== 'string') {
+      return false;
+    }
+
+    // ... rest of the code
+  }
+
+  return true;
+}
+
+function generateQRCode(url: string): void {
+  const qrcodeElement = document.getElementById("qrcode");
+  qrcodeElement.innerHTML = ""; // Clear any existing QR code
+  new QRCode(qrcodeElement, {
+    text: url,
+    width: 60, // Set the desired width
+    height: 60, // Set the desired height
+  });
 }
