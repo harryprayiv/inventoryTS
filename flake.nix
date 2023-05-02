@@ -98,7 +98,6 @@
                     purs-nix.esbuild
                     purs-nix.purescript
                     nodejs
-                    spago
                   ];
               };
         });
