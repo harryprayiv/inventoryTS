@@ -3,46 +3,57 @@ module Main where
 import Prelude
 
 import Data.Array (take)
-import Data.Foldable (foldl)
-import Data.List (List(..), joinWith)
+import Data.Foldable (foldl, traverse_)
+import Data.List (List(..))
 import Data.Map as M
+import Data.Map.Internal (Map)
 import Data.Maybe (fromMaybe)
 import Effect (Effect)
-import Effect.Aff (Aff)
+import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Ref (Ref, new, read, write)
 import Effect.Unsafe (unsafePerformEffect)
 import Halogen.Aff (awaitBody, runHalogenAff)
-import Halogen.DOM as DOM
 import Halogen.HTML (ClassName(..), text)
 import Halogen.HTML.Properties as P
 import Halogen.VDom.Driver (runUI)
 import Web.HTML (window)
 import Web.HTML.HTMLDocument as HTMLDocument
-import Web.HTML.HTMLElement (setAttribute)
+import Web.DOM.Element (setAttribute)
 import Web.HTML.HTMLInputElement (value)
 import Web.HTML.Window as Window
 import Web.DOM.Document (createElement)
-import Web.DOM.Element (setInnerHTML)
+-- import Web.DOM.Element (setInnerHTML)
 import Web.DOM.NonElementParentNode (getElementById)
-import Web.DOM.ParentNode (appendChild, removeChild)
+import Web.DOM.Node (appendChild, removeChild)
 import Web.Event.EventTarget (eventListener)
 import Web.File.File (File, name)
 import Web.File.FileReader as FileReader
 import Web.HTML.Event.DragEvent (dataTransfer)
-import Web.HTML.Event.Event (preventDefault)
-import Web.UIEvent.MouseEvent (clientX, clientY, target)
-import Web.HTML.Event.DataTransfer (length, item)
-import Web.HTML.HTMLDataTransferItem (getAsFile)
+import Web.Event.Event (preventDefault, target)
+import Web.UIEvent.MouseEvent (clientX, clientY)
+import Web.HTML.Event.DataTransfer (items)
+import Web.HTML.Event.DataTransfer.DataTransferItem (length)
+-- import Web.HTML.HTMLDataTransferItem (getAsFile)
+-- import Web.HTML.Event.DataTransfer
 import Web.HTML.Navigator as Navigator
-import Web.File.URL (createObjectURL)
+import Web.File.Url (createObjectURL)
 import Web.HTML.History (URL)
+import Web.Event.EventTarget (addEventListener)
+import Fetch.Core (fetch)
 
 import Data.Bifunctor (lmap)
 import Data.Either (Either(..), note)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
+import Data.String.Common (joinWith)
 import Data.Tuple (Tuple(..))
+import Control.Monad.Error.Class (catchError)
+import Web.Event.Internal.Types (Event)
+import Data.Argonaut.Core (Json)
+import Data.ArrayBuffer.Types (ArrayBuffer)
+import Halogen.HTML.Elements (style)
+import Crypto.Subtle.Hash (sha256)
 
 
 type ItemData = { count :: Int, addedBy :: String, notes :: Array (Tuple String Int) }
@@ -70,7 +81,7 @@ populateMainCategories menuData = do
     optionItem # setInnerText key
     mainCategoryElement # appendChild optionItem
 
-  mainCategoryElement # setStyle "display" "inline"
+  mainCategoryElement # style "display" "inline"
   _ <- addEventListener "change" (mkEffectFn1 $ const $ do
     mainCategoryValue <- mainCategoryElement # getValue
     case lookup mainCategoryValue menuData of
@@ -91,7 +102,7 @@ populateSubCategories subCategories = do
     optionItem # setInnerText key
     subCategoryElement # appendChild optionItem
 
-  subCategoryElement # setStyle "display" "inline"
+  subCategoryElement # style "display" "inline"
   _ <- addEventListener "change" (mkEffectFn1 $ const $ do
     subCategoryValue <- subCategoryElement # getValue
     case lookup subCategoryValue subCategories of
@@ -120,7 +131,7 @@ handleRowClick row item mainCategory subCategory count = do
         difference = newCountValue - count
       differenceCell <- row # cells # item 1
       differenceCell # setInnerText (show difference)
-      differenceCell # setStyle "color" (if difference < 0 then "red" else "green")
+      differenceCell # style "color" (if difference < 0 then "red" else "green")
 
       currentData <- getCountData
       let
@@ -136,7 +147,7 @@ populateItems items = do
     optionItem # setInnerText itemName
     itemElement # appendChild optionItem
 
-  itemElement # setStyle "display" "inline"
+  itemElement # style "display" "inline"
 
 changeCount :: Int -> Effect Unit
 changeCount sign = do
@@ -199,7 +210,7 @@ displayCountList countData = do
   colgroup <- createElement "colgroup"
   for_ ["10%", "20%", "35%", "20%", "15%"] \width -> do
     col <- createElement "col"
-    col # setStyle "width" width
+    col # style "width" width
     colgroup # appendChild col
   countListElement # appendChild colgroup
 
@@ -226,7 +237,7 @@ displayCountList countData = do
             noteCell <- row # insertCell 1
             noteCell # setInnerText (show lastAnnotation)
             noteCell # addClass (if lastAnnotationVisitorId == visitorId then "current-session" else "imported-session")
-            noteCell # setStyle "color" (if lastAnnotation < 0 then "red" else "green")
+            noteCell # style "color" (if lastAnnotation < 0 then "red" else "green")
           _ -> row # insertCell 1 # setInnerText ""
 
         row # insertCell 2 # setInnerText item
@@ -373,24 +384,24 @@ showErrorOverlay :: Effect Unit
 showErrorOverlay = do
   overlay <- createElement "div"
   setAttribute "id" "errorOverlay" overlay
-  setStyle "position" "fixed" overlay
-  setStyle "top" "0" overlay
-  setStyle "left" "0" overlay
-  setStyle "width" "100%" overlay
-  setStyle "height" "100%" overlay
-  setStyle "backgroundColor" "rgba(0, 0, 0, 0.5)" overlay
-  setStyle "display" "flex" overlay
-  setStyle "justifyContent" "center" overlay
-  setStyle "alignItems" "center" overlay
-  setStyle "zIndex" "9999" overlay
+  style "position" "fixed" overlay
+  style "top" "0" overlay
+  style "left" "0" overlay
+  style "width" "100%" overlay
+  style "height" "100%" overlay
+  style "backgroundColor" "rgba(0, 0, 0, 0.5)" overlay
+  style "display" "flex" overlay
+  style "justifyContent" "center" overlay
+  style "alignItems" "center" overlay
+  style "zIndex" "9999" overlay
 
   gifContainer <- createElement "div"
-  setStyle "width" "400px" gifContainer
-  setStyle "height" "400px" gifContainer
-  setStyle "backgroundImage" "url(\"https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif\")" gifContainer
-  setStyle "backgroundSize" "contain" gifContainer
-  setStyle "backgroundRepeat" "no-repeat" gifContainer
-  setStyle "backgroundPosition" "center center" gifContainer
+  style "width" "400px" gifContainer
+  style "height" "400px" gifContainer
+  style "backgroundImage" "url(\"https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif\")" gifContainer
+  style "backgroundSize" "contain" gifContainer
+  style "backgroundRepeat" "no-repeat" gifContainer
+  style "backgroundPosition" "center center" gifContainer
 
   appendChild overlay gifContainer
   appendChild documentBody overlay
@@ -449,7 +460,7 @@ handleInventoryFileInputChange event = do
 
 digestMessage :: ArrayBuffer -> Aff String
 digestMessage buffer = do
-  hashBuffer <- cryptoSubtleDigest "SHA-256" buffer
+  hashBuffer <- sha256 "SHA-256" buffer
   let hashArray = toUnfoldable $ typedArrayFromBuffer hashBuffer
   pure $ joinWith "" $ map (\b -> padLeft 2 '0' (showInt16 b)) hashArray
 

@@ -64,6 +64,10 @@
                   web-uievents
                   web-events
                   halogen
+                  transformers
+                  fetch-core
+                  arraybuffer-types 
+                  subtlecrypto 
                   # foreign-generic
                   # nonbili-dom
                 ];
