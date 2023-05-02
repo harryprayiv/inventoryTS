@@ -1,20 +1,20 @@
 {
   inputs = {
-    purs-nix.url = "github:purs-nix/purs-nix/ps-0.15";
+    purs-nix.url = "github:cardanonix/purs-nix/ps-0.15";
     nixpkgs.follows = "purs-nix/nixpkgs";
     utils.url = "github:ursi/flake-utils";
     ps-tools.follows = "purs-nix/ps-tools";
-    # npmlock2nix = { 
-    #   flake = false;
-    #   url = "github:nix-community/npmlock2nix";
-    # };
+    npmlock2nix = { 
+      flake = false;
+      url = "github:nix-community/npmlock2nix";
+    };
   };
 
   outputs = { self, utils, nixpkgs, ... }@inputs:
     let
-      systems = [ "x86_64-linux" "x86_64-darwin" ];
+      systems = [ "x86_64-linux" ];
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
-      # npmlock2nix = (import inputs.npmlock2nix { inherit pkgs; }).v1;
+      npmlock2nix = (import inputs.npmlock2nix { inherit pkgs; }).v1;
     in
     utils.apply-systems
       { inherit inputs systems; }
@@ -55,23 +55,31 @@
                   simple-json
                   web-file
                   web-storage
-                  # storable
-                  # qr-code
+                  ordered-collections
+                  js-timers
+                  foldable-traversable
+                  flame
+                  arraybuffer-types
+                  affjax
+                  web-uievents
+                  web-events
+                  halogen
+                  # foreign-generic
+                  # nonbili-dom
                 ];
               # FFI dependencies
-              # foreign.Main.node_modules = [ qrcode ];
+              # foreign.Foreign.JSON.node_modules = with purs-nix.ps-pkgs; [ purescript-foreign-generic ];
             };
           ps-tools = inputs.ps-tools.legacyPackages.${system};
           ps-command = ps.command { };
         in
         {
           # packages.default = ps.output { };
-          packages =
-             with ps;
-             { default = app { name = "inventori"; };
-               bundle = bundle {};
-               output = output {};
-             };
+          packages  = with ps; { 
+            default = app { name = "inventori"; };
+            bundle  = bundle {};
+            output  = output {};
+          };
 
           devShells.default =
             pkgs.mkShell

@@ -242,6 +242,22 @@
         "type": "github"
       }
     },
+    "npmlock2nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1673447413,
+        "narHash": "sha256-sJM82Sj8yfQYs9axEmGZ9Evzdv/kDcI9sddqJ45frrU=",
+        "owner": "nix-community",
+        "repo": "npmlock2nix",
+        "rev": "9197bbf397d76059a76310523d45df10d2e4ca81",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "npmlock2nix",
+        "type": "github"
+      }
+    },
     "parsec": {
       "locked": {
         "lastModified": 1635533376,
@@ -289,15 +305,15 @@
         "utils": "utils_3"
       },
       "locked": {
-        "lastModified": 1678310706,
-        "narHash": "sha256-R3hMAQDw5H4C+7GLmQMTQ7jXms5RC3r5qoIMe2WuNqo=",
-        "owner": "purs-nix",
+        "lastModified": 1683008328,
+        "narHash": "sha256-lQrXVl/Jbr5fiDArJ9CILm9znEZvDcc1rQU06oRFVok=",
+        "owner": "cardanonix",
         "repo": "purs-nix",
-        "rev": "4fc024079dbbf510e1d143e2c5bc73d5b518c802",
+        "rev": "9d5c21c86bf97b007afbff0e6882a1f3c5d3f451",
         "type": "github"
       },
       "original": {
-        "owner": "purs-nix",
+        "owner": "cardanonix",
         "ref": "ps-0.15",
         "repo": "purs-nix",
         "type": "github"
@@ -309,6 +325,7 @@
           "purs-nix",
           "nixpkgs"
         ],
+        "npmlock2nix": "npmlock2nix",
         "ps-tools": [
           "purs-nix",
           "ps-tools"

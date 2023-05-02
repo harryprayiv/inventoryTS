@@ -1,31 +1,57 @@
 module Main where
 
 import Prelude
+
+import Data.Array (take)
+import Data.Foldable (foldl)
+import Data.List (List(..), joinWith)
+import Data.Map as M
+import Data.Maybe (fromMaybe)
 import Effect (Effect)
-import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Effect.Aff (Aff)
+import Effect.Class (liftEffect)
+import Effect.Console (log)
+import Effect.Ref (Ref, new, read, write)
+import Effect.Unsafe (unsafePerformEffect)
+import Halogen.Aff (awaitBody, runHalogenAff)
+import Halogen.DOM as DOM
+import Halogen.HTML (ClassName(..), text)
+import Halogen.HTML.Properties as P
+import Halogen.VDom.Driver (runUI)
 import Web.HTML (window)
-import Web.HTML.Window (document)
 import Web.HTML.HTMLDocument as HTMLDocument
-import Web.HTML.HTMLElement (HTMLElement)
-import Web.HTML.HTMLButtonElement (HTMLButtonElement, toHTMLButtonElement)
-import Web.HTML.HTMLInputElement (HTMLInputElement, toHTMLInputElement)
-import Web.HTML.HTMLParagraphElement (HTMLParagraphElement, toHTMLParagraphElement)
-import Web.HTML.HTMLSelectElement (HTMLSelectElement, toHTMLSelectElement)
-import Web.HTML.HTMLTableElement (HTMLTableElement, toHTMLTableElement)
-import Web.DOM (document)
-import Web.DOM.Document (getElementById)
-import Web.DOM.Element (fromElement)
-import Web.Event.EventTarget (addEventListener)
-import Web.Storage.LocalStorage (getItem, setItem, removeItem)
-import Data.Maybe (Maybe(..))
+import Web.HTML.HTMLElement (setAttribute)
+import Web.HTML.HTMLInputElement (value)
+import Web.HTML.Window as Window
+import Web.DOM.Document (createElement)
+import Web.DOM.Element (setInnerHTML)
+import Web.DOM.NonElementParentNode (getElementById)
+import Web.DOM.ParentNode (appendChild, removeChild)
+import Web.Event.EventTarget (eventListener)
+import Web.File.File (File, name)
+import Web.File.FileReader as FileReader
+import Web.HTML.Event.DragEvent (dataTransfer)
+import Web.HTML.Event.Event (preventDefault)
+import Web.UIEvent.MouseEvent (clientX, clientY, target)
+import Web.HTML.Event.DataTransfer (length, item)
+import Web.HTML.HTMLDataTransferItem (getAsFile)
+import Web.HTML.Navigator as Navigator
+import Web.File.URL (createObjectURL)
+import Web.HTML.History (URL)
+
+import Data.Bifunctor (lmap)
+import Data.Either (Either(..), note)
+import Data.String.CodeUnits (fromCharArray, toCharArray)
+import Data.Tuple (Tuple(..))
+
 
 type ItemData = { count :: Int, addedBy :: String, notes :: Array (Tuple String Int) }
 
-type SubCategoryData = StrMap ItemData
+type SubCategoryData = Map ItemData
 
-type MainCategoryData = StrMap SubCategoryData
+type MainCategoryData = Map SubCategoryData
 
-type CountData = StrMap MainCategoryData
+type CountData = Map MainCategoryData
 
 visitorId :: String
 visitorId = getVisitorId
@@ -34,11 +60,11 @@ getButtonById :: String -> Effect (Maybe HTMLButtonElement)
 getButtonById id = do
   doc <- window >>= document
   element <- HTMLDocument.getElementById id doc
-  pure $ toHTMLButtonElement =<< element
+  pure $ toHTMLElement =<< element
 
 populateMainCategories :: CountData -> Effect Unit
 populateMainCategories menuData = do
-  mainCategoryElement # setInnerHTML ""
+  setInnerHTML mainCategoryElement ""
   for_ (keys menuData) \key -> do
     optionItem <- createElement "option"
     optionItem # setInnerText key
@@ -59,7 +85,7 @@ populateMainCategories menuData = do
 
 populateSubCategories :: SubCategoryData -> Effect Unit
 populateSubCategories subCategories = do
-  subCategoryElement # setInnerHTML ""
+  subCategoryElement # innerHTML ""
   for_ (keys subCategories) \key -> do
     optionItem <- createElement "option"
     optionItem # setInnerText key
@@ -82,7 +108,7 @@ addItem :: String -> String -> String -> Effect Unit
 addItem mainCategory subCategory item = do
   currentData <- getCountData
   let
-    newData = insertWithDefault mainCategory (empty :: MainCategoryData) (insertWithDefault subCategory (empty :: SubCategoryData) (insertWithDefault item { count: 1, addedBy: visitorId, notes: [(Tuple visitorId 1)] } currentData)) currentData
+    newData = insertWithDefault mainCategory (null :: MainCategoryData) (insertWithDefault subCategory (null :: SubCategoryData) (insertWithDefault item { count: 1, addedBy: visitorId, notes: [(Tuple visitorId 1)] } currentData)) currentData
   setCountData newData
 
 handleRowClick :: HTMLElement -> String -> String -> String -> Int -> Effect Unit
@@ -104,7 +130,7 @@ handleRowClick row item mainCategory subCategory count = do
 
 populateItems :: Array String -> Effect Unit
 populateItems items = do
-  itemElement # setInnerHTML ""
+  itemElement # innerHTML ""
   for_ items \itemName -> do
     optionItem <- createElement "option"
     optionItem # setInnerText itemName
@@ -124,7 +150,7 @@ changeCount sign = do
   let
     updatedCountData = adjust mainCategory (\mainData -> adjust subCategory (\subData -> insertWithDefault item { count: 0, addedBy: visitorId, notes: [] } subData) mainData) countData
 
-    updatedCount = lookup mainCategory countData >>= lookup subCategory >>= lookup item >>= (_.count >>> (flip add) countValue) <|> Just 0
+    updatedCount = lookup mainCategory countData >>= lookup subCategory >>= lookup item >>= (_.count >>> (flip (+)) countValue) <|> Just 0
 
   case updatedCount of
     Just updatedCountValue
@@ -167,7 +193,7 @@ updateListNameDisplay listName = do
 displayCountList :: CountData -> Effect Unit
 displayCountList countData = do
   countListElement <- getElementById "countList" >>= unsafeCoerce
-  countListElement # setInnerHTML ""
+  countListElement # innerHTML ""
 
   -- Create colgroup with column widths
   colgroup <- createElement "colgroup"
@@ -214,7 +240,7 @@ getCountData = do
   countDataString <- getItem "countData"
   case countDataString of
     Just str -> pure (unsafeFromJson str)
-    _ -> pure M.empty
+    _ -> pure M.null
 
 setCountData :: CountData -> Effect Unit
 setCountData countData = do
@@ -225,16 +251,16 @@ mergeCountData :: CountData -> CountData -> CountData
 mergeCountData currentData importedData =
   let
     mergeItem mainCategory subCategory item =
-      case M.lookup item (fromMaybe M.empty (M.lookup subCategory (M.lookup mainCategory currentData))) of
+      case M.lookup item (fromMaybe M.null (M.lookup subCategory (M.lookup mainCategory currentData))) of
         Just current -> current { count = count current + count item
                                 , notes = notes current <> notes item }
         Nothing -> item
 
     mergeSubCategory mainCategory subCategory =
-      M.unionWith (mergeItem mainCategory subCategory) subCategory (fromMaybe M.empty (M.lookup subCategory (M.lookup mainCategory currentData)))
+      M.unionWith (mergeItem mainCategory subCategory) subCategory (fromMaybe M.null (M.lookup subCategory (M.lookup mainCategory currentData)))
 
     mergeMainCategory mainCategory =
-      M.unionWith (mergeSubCategory mainCategory) mainCategory (fromMaybe M.empty (M.lookup mainCategory currentData))
+      M.unionWith (mergeSubCategory mainCategory) mainCategory (fromMaybe M.null (M.lookup mainCategory currentData))
   in
     M.unionWith mergeMainCategory importedData currentData
 
@@ -244,7 +270,7 @@ exportListAsJSON = do
   sourceHash <- getItem "sourceHash"
 
   let
-    exportData = foldl (\acc mainCategory -> M.insert mainCategory (foldl (\acc' subCategory -> M.insert subCategory (foldl (\acc'' item -> M.insert item { addedBy = addedBy item, notes = notes item } acc'') M.empty (M.lookup subCategory (M.lookup mainCategory countData))) acc') M.empty (M.lookup mainCategory countData)) acc) (M.singleton "sourceHash" (fromMaybe "" sourceHash)) countData
+    exportData = foldl (\acc mainCategory -> M.insert mainCategory (foldl (\acc' subCategory -> M.insert subCategory (foldl (\acc'' item -> M.insert item { addedBy = addedBy item, notes = notes item } acc'') M.null (M.lookup subCategory (M.lookup mainCategory countData))) acc') M.null (M.lookup mainCategory countData)) acc) (M.singleton "sourceHash" (fromMaybe "" sourceHash)) countData
 
     dataString = stringifyWithIndent 2 exportData
     blob = newBlob [dataString] { type: "application/json" }
@@ -270,7 +296,7 @@ exportListAsCSV = do
 
   let
     headers = ["Count", "Diff", "Item", "Type", "Category"]
-    csvContent = unlines $ (intercalate "," headers) : do
+    csvContent = joinWith "\n" $ (intercalate "," headers) : do
       mainCategory <- M.keys countData
       subCategory <- M.keys (countData ! mainCategory)
       item <- M.keys (countData ! mainCategory ! subCategory)
@@ -382,7 +408,7 @@ validateImportedData importedData =
 generateQRCode :: String -> Effect Unit
 generateQRCode url = do
   qrcodeElement <- getElementById "qrcode"
-  qrcodeElement # setInnerHTML ""
+  qrcodeElement # innerHTML ""
 
   _ <- new (unsafeCoerce QRCode) [toForeign qrcodeElement, unsafeFromJson "{ \"text\": url, \"width\": 90, \"height\": 90 }"]
   pure unit
@@ -390,16 +416,17 @@ generateQRCode url = do
 loadInventory :: Effect CountData
 loadInventory = do
   response <- fetch "inventory.json"
-  jsonData <- response.json()
+  jsonData <- response.json
   let
     countData = foldl (\mainCategory countData -> foldl (\subCategory countData ->
       foldl (\item countData ->
         if isNothing (lookup mainCategory countData) then
           insert mainCategory (singleton subCategory (singleton item { count: 0, addedBy: visitorId, notes: [] })) countData
         else
-          insert mainCategory (insert subCategory (singleton item { count: 0, addedBy: visitorId, notes: [] }) (fromMaybe mempty (lookup mainCategory countData))) countData
+          insert mainCategory (insert subCategory (singleton item { count: 0, addedBy: visitorId, notes: [] }) (fromMaybe mnull (lookup mainCategory countData))) countData
       ) countData (keys (lookup subCategory (lookup mainCategory jsonData)))
-    ) countData (keys (lookup mainCategory jsonData))) mempty (keys jsonData)
+    ) countData (keys (lookup mainCategory jsonData))) mnull (keys jsonData)
+  pure countData
 
 handleInventoryFileInputChange :: Event -> Effect Unit
 handleInventoryFileInputChange event = do
@@ -415,7 +442,7 @@ handleInventoryFileInputChange event = do
           Left err -> do
             showErrorOverlay
             setMessage "Error loading JSON file: Invalid JSON format."
-          Right data -> populateMainCategories data
+          Right inventoryData -> populateMainCategories inventoryData
       ) reader
       readAsText reader f
     _ -> setMessage "Please select a JSON file."
@@ -454,16 +481,16 @@ handleFileInputChange event = do
                 liftEffect showErrorOverlay
                 liftEffect $ setMessage "Error loading JSON file: Invalid JSON format."
                 liftEffect $ setTimeout 3000 $ setMessage ""
-              Right data -> do
-                if not $ validateImportedData data then do
+              Right importedData -> do
+                if not $ validateImportedData importedData then do
                   liftEffect showErrorOverlay
                   liftEffect $ setMessage "Error loading JSON file: Invalid data format."
                   liftEffect $ setTimeout 3000 $ setMessage ""
                 else do
                   storedSourceHash <- liftEffect $ getItem "sourceHash"
                   let
-                    importedSourceHash = data.sourceHash
-                    importedData' = delete "sourceHash" data
+                    importedSourceHash = importedData.sourceHash
+                    importedData' = delete "sourceHash" importedData
 
                   when (storedSourceHash /= importedSourceHash) $ do
                     liftEffect showErrorOverlay
@@ -539,7 +566,7 @@ setupEventListeners = do
     confirmResult <- confirm "Are you sure you want to clear the list?"
     when confirmResult $ do
       _ <- localStorageRemoveItem "countData"
-      countListElement # setInnerHTML ""
+      countListElement # innerHTML ""
       clearImportedFileHashes
   ) clearListButton
 
