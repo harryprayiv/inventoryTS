@@ -87,7 +87,7 @@ function handleInventoryFileInputChange(event) {
         }
     });
 }
-function annotateItem(mainCategory, subCategory, item) {
+export function annotateItem(mainCategory, subCategory, item) {
     const currentData = getCountData();
     const itemData = currentData[mainCategory][subCategory][item];
     // Prompt the user to enter an note
@@ -97,34 +97,8 @@ function annotateItem(mainCategory, subCategory, item) {
         setCountData(currentData);
     }
 }
-function showErrorOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'errorOverlay';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    overlay.style.display = 'flex';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
-    overlay.style.zIndex = '9999';
-    const gifContainer = document.createElement('div');
-    gifContainer.style.width = '400px';
-    gifContainer.style.height = '400px';
-    gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
-    gifContainer.style.backgroundSize = 'contain';
-    gifContainer.style.backgroundRepeat = 'no-repeat';
-    gifContainer.style.backgroundPosition = 'center center';
-    overlay.appendChild(gifContainer);
-    document.body.appendChild(overlay);
-    setTimeout(() => {
-        document.body.removeChild(overlay);
-    }, 2000);
-}
 fetch('./inventory.json')
-    .then((response) => __awaiter(this, void 0, void 0, function* () {
+    .then((response) => __awaiter(void 0, void 0, void 0, function* () {
     const buffer = yield response.arrayBuffer();
     const hash = yield digestMessage(buffer);
     const jsonData = new TextDecoder().decode(buffer);
@@ -163,7 +137,7 @@ function loadInventory() {
         return countData;
     });
 }
-function populateMainCategories(menuData) {
+export function populateMainCategories(menuData) {
     mainCategoryElement.innerHTML = '';
     Object.keys(menuData).forEach(key => {
         const optionItem = document.createElement('option');
@@ -176,7 +150,7 @@ function populateMainCategories(menuData) {
     });
     populateSubCategories(menuData[mainCategoryElement.value]);
 }
-function populateSubCategories(subCategories) {
+export function populateSubCategories(subCategories) {
     subCategoryElement.innerHTML = '';
     Object.keys(subCategories).forEach(key => {
         const optionItem = document.createElement('option');
@@ -189,7 +163,7 @@ function populateSubCategories(subCategories) {
     });
     populateItems(subCategories[subCategoryElement.value]);
 }
-function addItem(mainCategory, subCategory, item) {
+export function addItem(mainCategory, subCategory, item) {
     const currentData = getCountData();
     if (!currentData[mainCategory]) {
         currentData[mainCategory] = {};
@@ -210,7 +184,7 @@ function addItem(mainCategory, subCategory, item) {
     }
     setCountData(currentData);
 }
-function handleRowClick(row, item, mainCategory, subCategory, count) {
+export function handleRowClick(row, item, mainCategory, subCategory, count) {
     const newCount = prompt(`Enter new note for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
     if (newCount !== null) {
         const difference = parseInt(newCount) - count;
@@ -233,7 +207,7 @@ function populateItems(items) {
     });
     itemElement.style.display = 'inline';
 }
-function changeCount(sign) {
+export function changeCount(sign) {
     const count = parseInt(countInput.value, 10) * sign;
     const mainCategory = mainCategoryElement.value;
     const subCategory = subCategoryElement.value;
@@ -283,11 +257,11 @@ function digestMessage(buffer) {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     });
 }
-function updateListNameDisplay(listName) {
+export function updateListNameDisplay(listName) {
     listNameElement.textContent = listName;
     document.title = listName;
 }
-function displayCountList(data) {
+export function displayCountList(data) {
     var _a, _b, _c, _d, _e, _f;
     const countListElement = document.getElementById('countList');
     countListElement.innerHTML = '';
@@ -352,7 +326,7 @@ function displayCountList(data) {
         }
     }
 }
-function getCountData() {
+export function getCountData() {
     const countDataString = localStorage.getItem('countData');
     if (countDataString) {
         return JSON.parse(countDataString);
@@ -361,11 +335,11 @@ function getCountData() {
         return {};
     }
 }
-function setCountData(countData) {
+export function setCountData(countData) {
     const countDataString = JSON.stringify(countData);
     localStorage.setItem('countData', countDataString);
 }
-function exportListAsJSON() {
+export function exportListAsJSON() {
     const countData = getCountData();
     const sourceHash = localStorage.getItem('sourceHash');
     // Prepare the export data with notes
@@ -403,7 +377,7 @@ function exportListAsJSON() {
         URL.revokeObjectURL(url);
     }, 100);
 }
-function exportListAsCSV() {
+export function exportListAsCSV() {
     const countData = getCountData();
     const sourceHash = localStorage.getItem('sourceHash') || '';
     // Prepare the CSV headers
@@ -436,7 +410,7 @@ function exportListAsCSV() {
         URL.revokeObjectURL(url);
     }, 100);
 }
-function getVisitorId() {
+export function getVisitorId() {
     let visitorId = localStorage.getItem('visitorId');
     if (!visitorId) {
         visitorId = generateUniqueId();
@@ -444,7 +418,7 @@ function getVisitorId() {
     }
     return visitorId;
 }
-function generateUniqueId() {
+export function generateUniqueId() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 function handleFileInputChange(event) {
@@ -522,7 +496,7 @@ function handleFileInputChange(event) {
         }
     });
 }
-function getImportedFileHashes() {
+export function getImportedFileHashes() {
     const importedFileHashesString = localStorage.getItem('importedFileHashes');
     if (importedFileHashesString) {
         return JSON.parse(importedFileHashesString);
@@ -531,12 +505,12 @@ function getImportedFileHashes() {
         return [];
     }
 }
-function updateImportedFileHashes(newHash) {
+export function updateImportedFileHashes(newHash) {
     const importedFileHashes = getImportedFileHashes();
     importedFileHashes.push(newHash);
     localStorage.setItem('importedFileHashes', JSON.stringify(importedFileHashes));
 }
-function mergeCountData(currentData, importedData) {
+export function mergeCountData(currentData, importedData) {
     const result = JSON.parse(JSON.stringify(currentData));
     for (const mainCategory in importedData) {
         if (!result[mainCategory]) {
@@ -568,7 +542,7 @@ function mergeCountData(currentData, importedData) {
     }
     return result;
 }
-function clearImportedFileHashes() {
+export function clearImportedFileHashes() {
     const sourceHash = localStorage.getItem('sourceHash');
     if (sourceHash) {
         localStorage.setItem('importedFileHashes', JSON.stringify([sourceHash]));
@@ -577,7 +551,7 @@ function clearImportedFileHashes() {
         localStorage.removeItem('importedFileHashes');
     }
 }
-function clearAllBrowserData() {
+export function clearAllBrowserData() {
     if (confirm('Are you sure you want to clear all browser data for this page?')) {
         // List all the keys you want to remove from the local storage
         const keysToRemove = [
@@ -593,7 +567,7 @@ function clearAllBrowserData() {
         window.location.reload();
     }
 }
-function validateImportedData(importedData) {
+export function validateImportedData(importedData) {
     if (!importedData) {
         return false;
     }
@@ -611,7 +585,7 @@ function validateImportedData(importedData) {
     }
     return true;
 }
-function generateQRCode(url) {
+export function generateQRCode(url) {
     const qrcodeElement = document.getElementById("qrcode");
     qrcodeElement.innerHTML = ""; // Clear any existing QR code
     new QRCode(qrcodeElement, {
@@ -619,4 +593,30 @@ function generateQRCode(url) {
         width: 90,
         height: 90, // Set the desired height
     });
+}
+export function showErrorOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'errorOverlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '9999';
+    const gifContainer = document.createElement('div');
+    gifContainer.style.width = '400px';
+    gifContainer.style.height = '400px';
+    gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
+    gifContainer.style.backgroundSize = 'contain';
+    gifContainer.style.backgroundRepeat = 'no-repeat';
+    gifContainer.style.backgroundPosition = 'center center';
+    overlay.appendChild(gifContainer);
+    document.body.appendChild(overlay);
+    setTimeout(() => {
+        document.body.removeChild(overlay);
+    }, 2000);
 }

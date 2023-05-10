@@ -105,7 +105,7 @@ async function handleInventoryFileInputChange(event: Event) {
   }
 }
 
-function annotateItem(mainCategory: string, subCategory: string, item: string): void {
+export function annotateItem(mainCategory: string, subCategory: string, item: string): void {
   const currentData = getCountData();
   const itemData = currentData[mainCategory][subCategory][item];
 
@@ -115,37 +115,6 @@ function annotateItem(mainCategory: string, subCategory: string, item: string): 
     itemData.notes.push([visitorId, parseInt(note)]); // Add the visitorId and the parsed integer note
     setCountData(currentData);
   }
-}
-
-
-function showErrorOverlay() {
-  const overlay = document.createElement('div');
-  overlay.id = 'errorOverlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-  overlay.style.display = 'flex';
-  overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
-  overlay.style.zIndex = '9999';
-
-  const gifContainer = document.createElement('div');
-  gifContainer.style.width = '400px';
-  gifContainer.style.height = '400px';
-  gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
-  gifContainer.style.backgroundSize = 'contain';
-  gifContainer.style.backgroundRepeat = 'no-repeat';
-  gifContainer.style.backgroundPosition = 'center center';
-
-  overlay.appendChild(gifContainer);
-  document.body.appendChild(overlay);
-
-  setTimeout(() => {
-    document.body.removeChild(overlay);
-  }, 2000);
 }
 
 fetch('./inventory.json')
@@ -187,7 +156,7 @@ fetch('./inventory.json')
     return countData;
   }
 
-function populateMainCategories(menuData: CountData): void {
+export function populateMainCategories(menuData: CountData): void {
   mainCategoryElement.innerHTML = '';
   Object.keys(menuData).forEach(key => {
     const optionItem = document.createElement('option');
@@ -203,7 +172,7 @@ function populateMainCategories(menuData: CountData): void {
   populateSubCategories(menuData[mainCategoryElement.value]);
 }
 
-function populateSubCategories(subCategories: any) {
+export function populateSubCategories(subCategories: any) {
   subCategoryElement.innerHTML = '';
   Object.keys(subCategories).forEach(key => {
     const optionItem = document.createElement('option');
@@ -219,7 +188,7 @@ function populateSubCategories(subCategories: any) {
   populateItems(subCategories[subCategoryElement.value]);
 }
 
-function addItem(mainCategory: string, subCategory: string, item: string): void {
+export function addItem(mainCategory: string, subCategory: string, item: string): void {
   const currentData = getCountData();
   if (!currentData[mainCategory]) {
     currentData[mainCategory] = {};
@@ -240,7 +209,7 @@ function addItem(mainCategory: string, subCategory: string, item: string): void 
   setCountData(currentData);
 }
 
-function handleRowClick(row, item, mainCategory, subCategory, count) {
+export function handleRowClick(row, item, mainCategory, subCategory, count) {
   const newCount = prompt(`Enter new note for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
   if (newCount !== null) {
     const difference = parseInt(newCount) - count;
@@ -267,7 +236,7 @@ function populateItems(items: string[]) {
   itemElement.style.display = 'inline';
 }
 
-function changeCount(sign: number) {
+export function changeCount(sign: number) {
   const count = parseInt(countInput.value, 10) * sign;
   const mainCategory = mainCategoryElement.value;
   const subCategory = subCategoryElement.value;
@@ -323,12 +292,12 @@ async function digestMessage(buffer: ArrayBuffer): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function updateListNameDisplay(listName: string) {
+export function updateListNameDisplay(listName: string) {
   listNameElement.textContent = listName;
   document.title = listName;
 }
 
-function displayCountList(data: CountData): void {
+export function displayCountList(data: CountData): void {
   const countListElement = document.getElementById('countList') as HTMLTableElement;
   countListElement.innerHTML = '';
 
@@ -405,8 +374,7 @@ function displayCountList(data: CountData): void {
   }
 }
 
-
-function getCountData(): CountData {
+export function getCountData(): CountData {
   const countDataString = localStorage.getItem('countData');
   if (countDataString) {
     return JSON.parse(countDataString);
@@ -415,12 +383,12 @@ function getCountData(): CountData {
   }
 }
 
-function setCountData(countData: any): void {
+export function setCountData(countData: any): void {
   const countDataString = JSON.stringify(countData);
   localStorage.setItem('countData', countDataString);
 }
 
-function exportListAsJSON(): void {
+export function exportListAsJSON(): void {
   const countData = getCountData();
   const sourceHash = localStorage.getItem('sourceHash');
 
@@ -463,7 +431,7 @@ function exportListAsJSON(): void {
   }, 100);
 }
 
-function exportListAsCSV() {
+export function exportListAsCSV() {
   const countData = getCountData();
   const sourceHash = localStorage.getItem('sourceHash') || '';
 
@@ -502,7 +470,7 @@ function exportListAsCSV() {
   }, 100);
 }
 
-function getVisitorId(): string {
+export function getVisitorId(): string {
   let visitorId = localStorage.getItem('visitorId');
   if (!visitorId) {
     visitorId = generateUniqueId();
@@ -511,7 +479,7 @@ function getVisitorId(): string {
   return visitorId;
 }
 
-function generateUniqueId(): string {
+export function generateUniqueId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
@@ -596,7 +564,7 @@ async function handleFileInputChange(event: Event) {
   }
 }
 
-function getImportedFileHashes(): string[] {
+export function getImportedFileHashes(): string[] {
   const importedFileHashesString = localStorage.getItem('importedFileHashes');
   if (importedFileHashesString) {
     return JSON.parse(importedFileHashesString);
@@ -605,13 +573,13 @@ function getImportedFileHashes(): string[] {
   }
 }
 
-function updateImportedFileHashes(newHash: string): void {
+export function updateImportedFileHashes(newHash: string): void {
   const importedFileHashes = getImportedFileHashes();
   importedFileHashes.push(newHash);
   localStorage.setItem('importedFileHashes', JSON.stringify(importedFileHashes));
 }
 
-function mergeCountData(currentData: CountData, importedData: CountData): CountData {
+export function mergeCountData(currentData: CountData, importedData: CountData): CountData {
   const result: CountData = JSON.parse(JSON.stringify(currentData));
 
   for (const mainCategory in importedData) {
@@ -644,7 +612,7 @@ function mergeCountData(currentData: CountData, importedData: CountData): CountD
   return result;
 }
 
-function clearImportedFileHashes(): void {
+export function clearImportedFileHashes(): void {
   const sourceHash = localStorage.getItem('sourceHash');
   if (sourceHash) {
     localStorage.setItem('importedFileHashes', JSON.stringify([sourceHash]));
@@ -653,7 +621,7 @@ function clearImportedFileHashes(): void {
   }
 }
 
-function clearAllBrowserData() {
+export function clearAllBrowserData() {
   if (confirm('Are you sure you want to clear all browser data for this page?')) {
     // List all the keys you want to remove from the local storage
     const keysToRemove = [
@@ -672,7 +640,7 @@ function clearAllBrowserData() {
   }
 }
 
-function validateImportedData(importedData: any): boolean {
+export function validateImportedData(importedData: any): boolean {
   if (!importedData) {
     return false;
   }
@@ -695,7 +663,7 @@ function validateImportedData(importedData: any): boolean {
   return true;
 }
 
-function generateQRCode(url: string): void {
+export function generateQRCode(url: string): void {
   const qrcodeElement = document.getElementById("qrcode");
   qrcodeElement.innerHTML = ""; // Clear any existing QR code
   new QRCode(qrcodeElement, {
@@ -704,3 +672,34 @@ function generateQRCode(url: string): void {
     height: 90, // Set the desired height
   });
 }
+
+export function showErrorOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'errorOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.zIndex = '9999';
+
+  const gifContainer = document.createElement('div');
+  gifContainer.style.width = '400px';
+  gifContainer.style.height = '400px';
+  gifContainer.style.backgroundImage = 'url("https://media.tenor.com/1SastyjoZWoAAAAj/dennis-nedry.gif")';
+  gifContainer.style.backgroundSize = 'contain';
+  gifContainer.style.backgroundRepeat = 'no-repeat';
+  gifContainer.style.backgroundPosition = 'center center';
+
+  overlay.appendChild(gifContainer);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    document.body.removeChild(overlay);
+  }, 2000);
+}
+

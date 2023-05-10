@@ -109,6 +109,20 @@
   button {
     cursor: pointer;
   }
+  .button-like-label {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .button-like-label:hover {
+    background-color: #0056b3;
+  }
   #listName {
     font-size: 32px;
     font-weight: bold;
@@ -167,8 +181,7 @@
   <button id="increment"> + </button>
   <button id="decrement"> - </button>
   <input id="countInput" type="number" value="1" min="1" step="1">
-  <label for="importInventory">Import List</label>
-  <input type="file" id="importInventory" accept=".json" class="hidden">
+  <a href="edit.html" id="importInventory" class="button-like-label">Customize</a>
   <table id="countList">
     <thead>
       <tr>
