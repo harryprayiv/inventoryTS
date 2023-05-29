@@ -23,15 +23,15 @@ Inventori facilitates the import of inventory data through the handleFileInputCh
 ## Data Management
 Inventori uses several functions to manage data effectively.
 
-getImportedFileHashes() retrieves the hashes of imported files from local storage.
+`getImportedFileHashes()` retrieves the hashes of imported files from local storage.
 
-updateImportedFileHashes() adds a new hash to the list of imported file hashes stored in the local storage.
+`updateImportedFileHashes()` adds a new hash to the list of imported file hashes stored in the local storage.
 
-mergeCountData() combines the current inventory data with imported data, ensuring that counts are summed up correctly, and notes are merged without duplication.
+`mergeCountData()` combines the current inventory data with imported data, ensuring that counts are summed up correctly, and notes are merged without duplication.
 
-clearImportedFileHashes() and clearAllBrowserData() functions are used to clear the list of imported file hashes and all app-related data from the local storage, respectively.
+`clearImportedFileHashes()` and `clearAllBrowserData()` functions are used to clear the list of imported file hashes and all app-related data from the local storage, respectively.
 
-validateImportedData() validates the imported data, checking that it adheres to the required structure and contains all the necessary fields.
+`validateImportedData()` validates the imported data, checking that it adheres to the required structure and contains all the necessary fields.
 
 ## QR Code Generation
 The generateQRCode() function generates a QR code based on a given URL, which can be used to share the URL on mobile devices easily.
