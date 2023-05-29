@@ -1,13 +1,9 @@
 # [Inventori](https://glittery-puffpuff-043120.netlify.app/)
 
-Inventori is a simple web application that allows users to create simple lists of gear, organizing them into main categories, sub-categories, and individual items. Users can increment or decrement the count of items as needed, rename the inventory list, and export the list as a JSON file.
+Inventori is a TypeScript application that offers a user-friendly system for managing and manipulating inventory data. It provides functionality to import and export inventory data from JSON files and also to export data in CSV format. It requires no commitment from users by exclusively utilizing the browser's local storage for data handling and management
 
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/77991343-af4e-4913-be94-f1789ca2981d/deploy-status)](https://app.netlify.com/sites/glittery-puffpuff-043120/deploys)
-
-## Features
-
-Inventori is a TypeScript application that offers a user-friendly system for managing and manipulating inventory data. It provides functionality to import and export inventory data from JSON files and also to export data in CSV format. It requires no commitment from users by exclusively utilizing the browser's local storage for data handling and management.
 
 # Key Features
 
