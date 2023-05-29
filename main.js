@@ -312,8 +312,8 @@ function displayCountList(data) {
     // Create table headers
     const header = countListElement.createTHead();
     const headerRow = header.insertRow(0);
-    headerRow.insertCell(0).textContent = 'Count';
-    headerRow.insertCell(1).textContent = 'Diff';
+    headerRow.insertCell(0).textContent = '#';
+    headerRow.insertCell(1).textContent = '+/-';
     headerRow.insertCell(2).textContent = 'Item';
     headerRow.insertCell(3).textContent = 'Type';
     headerRow.insertCell(4).textContent = 'Category';
