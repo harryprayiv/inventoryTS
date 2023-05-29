@@ -211,7 +211,7 @@ function addItem(mainCategory, subCategory, item) {
     setCountData(currentData);
 }
 function handleRowClick(row, item, mainCategory, subCategory, count) {
-    const newCount = prompt(`Enter new note for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
+    const newCount = prompt(`Enter the updated count for ${item} (${mainCategory} > ${subCategory}):`, count.toString());
     if (newCount !== null) {
         const difference = parseInt(newCount) - count;
         const differenceCell = row.cells[1]; // Assuming the difference cell is at index 1
