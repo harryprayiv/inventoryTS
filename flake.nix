@@ -33,9 +33,11 @@
                   effect
                   aff
                   arrays
+                  foreign
+                  foreign-object
+                  foreign-generic 
                   either
                   foldable-traversable
-                  foreign-object
                   integers
                   argonaut
                   argonaut-core
